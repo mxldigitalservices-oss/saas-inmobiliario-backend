@@ -5,7 +5,7 @@ from app.models.invoice import Invoice
 from app.models.tenant import Tenant
 from app.models.super_admin import SuperAdmin
 from app.models.audit_log import AuditLog
-from app.models.expenses import Expenses
+from app.models.expenses import Expense
 from app.models.media import Media
 from app.models.ncf_sequence import NcfSequence
 from app.models.payment_gateway import PaymentGateway
@@ -19,7 +19,7 @@ ALL_DOCUMENT_MODELS = [
     Tenant,
     SuperAdmin,
     AuditLog,
-    Expenses,
+    Expense,
     Media,
     NcfSequence,
     PaymentGateway,
