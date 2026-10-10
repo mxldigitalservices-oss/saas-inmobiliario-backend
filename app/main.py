@@ -1,11 +1,14 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.bootstrap import ensure_super_admin
 from app.core.config import settings
@@ -24,6 +27,17 @@ from app.routes import unit as unit_routes
 
 logger = logging.getLogger("app")
 API_PREFIX = "/api/v1"
+
+# Carpeta del frontend (en la raíz del proyecto, junto a app/)
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+FRONTEND_PAGES = (
+    "index",
+    "dashboard",
+    "properties",
+    "units",
+    "invoices",
+    "settings",
+)
 
 
 @asynccontextmanager
@@ -69,9 +83,40 @@ app.include_router(invoice_routes.router, prefix=API_PREFIX)
 app.include_router(expense_routes.router, prefix=API_PREFIX)
 
 
-@app.get("/", tags=["health"])
-async def root():
+@app.get("/api", tags=["health"])
+async def api_info():
     return {"name": settings.APP_NAME, "status": "ok", "docs": "/docs"}
+
+
+# ------------------------------------------------------------------ Frontend
+# Las rutas de la API y /docs se registran ANTES, así que nunca las pisa el frontend.
+def _serve_page(name: str):
+    def handler():
+        path = FRONTEND_DIR / "{}.html".format(name)
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="Página no encontrada")
+        # no-cache: el navegador revalida y siempre ve la última versión desplegada
+        return FileResponse(path, media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+    return handler
+
+
+# "/" muestra el login (index.html)
+app.add_api_route("/", _serve_page("index"), methods=["GET"], include_in_schema=False)
+# Las páginas se enlazan entre sí con rutas relativas (dashboard.html, units.html...)
+for _page in FRONTEND_PAGES:
+    app.add_api_route(
+        "/{}.html".format(_page),
+        _serve_page(_page),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+
+# Recursos propios (CSS/JS/imágenes) que agregues en frontend/ -> /static/...
+if FRONTEND_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+else:  # pragma: no cover
+    logger.warning("Carpeta frontend/ no encontrada: %s", FRONTEND_DIR)
 
 
 @app.get("/health", tags=["health"])
