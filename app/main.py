@@ -1,12 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.bootstrap import ensure_super_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
+from app.core.postgres_db import close_postgres, get_db, init_postgres
 from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
 from app.routes import expense as expense_routes
@@ -22,11 +25,13 @@ API_PREFIX = "/api/v1"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    await init_postgres()
     try:
         await ensure_super_admin()
     except Exception:  # pragma: no cover
         logger.exception("No se pudo crear el Super Admin inicial")
     yield
+    await close_postgres()
     await close_db()
 
 
@@ -63,3 +68,9 @@ async def root():
 @app.get("/health", tags=["health"])
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/health/postgres", tags=["health"])
+async def health_postgres(db: AsyncSession = Depends(get_db)):
+    await db.execute(text("SELECT 1"))
+    return {"status": "ok", "postgres": "connected"}

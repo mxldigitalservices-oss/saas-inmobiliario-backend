@@ -1,10 +1,30 @@
 import os
 import secrets
 from typing import List
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 def _split(value: str) -> List[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _normalize_pg_url(url: str) -> str:
+    """Convierte la URL de Railway al formato que exige SQLAlchemy + asyncpg.
+
+    postgres://...      -> postgresql+asyncpg://...
+    postgresql://...    -> postgresql+asyncpg://...
+    Quita ?sslmode=... (asyncpg no lo acepta como parámetro de URL).
+    """
+    url = (url or "").strip()
+    if not url:
+        return ""
+    for prefix in ("postgresql+asyncpg://", "postgresql://", "postgres://"):
+        if url.startswith(prefix):
+            url = "postgresql+asyncpg://" + url[len(prefix):]
+            break
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query) if k.lower() != "sslmode"]
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 class Settings:
@@ -32,6 +52,21 @@ class Settings:
             or "mongodb://localhost:27017"
         )
         self.MONGODB_DB = os.getenv("MONGODB_DB", "inmobiliaria_saas")
+        # PostgreSQL (Railway): DATABASE_URL tiene prioridad; si no existe, el servicio
+        # PostgreSQL de Railway expone DATABASE_URL / POSTGRES_URL. Vacío = Postgres desactivado.
+        self.DATABASE_URL = _normalize_pg_url(
+            os.getenv("DATABASE_URL")
+            or os.getenv("POSTGRES_URL")
+            or os.getenv("POSTGRESQL_URL")
+            or ""
+        )
+        self.PG_ECHO = os.getenv("PG_ECHO", "false").lower() == "true"
+        self.PG_POOL_SIZE = int(os.getenv("PG_POOL_SIZE", "5"))
+        self.PG_MAX_OVERFLOW = int(os.getenv("PG_MAX_OVERFLOW", "10"))
+        # Solo para desarrollo: crea las tablas al arrancar. En producción usa migraciones.
+        self.PG_AUTO_CREATE_TABLES = (
+            os.getenv("PG_AUTO_CREATE_TABLES", "true").lower() == "true"
+        )
         self.SUPERADMIN_EMAIL = (os.getenv("SUPERADMIN_EMAIL") or "").strip().lower()
         self.SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD") or ""
 
