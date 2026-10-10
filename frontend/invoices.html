@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facturación</title>
+
+  <!-- Guardia de ruta: se ejecuta antes de renderizar nada -->
+  <script>
+    if (!localStorage.getItem('access_token')) {
+      window.location.replace('index.html');
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp .5s ease-out both; }
+    @keyframes pulseSoft { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+    .skeleton { animation: pulseSoft 1.4s ease-in-out infinite; background: #e2e8f0; border-radius: .5rem; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .modal-in { animation: modalIn .25s ease-out both; }
+  </style>
+</head>
+<body class="h-full bg-slate-50 antialiased text-slate-900">
+
+  <div class="flex min-h-screen">
+
+    <!-- Overlay móvil -->
+    <div id="overlay" class="fixed inset-0 z-30 hidden bg-slate-900/40 backdrop-blur-sm lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-slate-100 bg-white px-6 py-8 transition-transform duration-300 lg:translate-x-0">
+      <div class="flex items-center gap-3 px-2">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-600/30">
+          <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-base font-bold tracking-tight text-slate-900">Inmobiliaria</p>
+          <p class="text-xs text-slate-500">Panel de gestión</p>
+        </div>
+      </div>
+
+      <nav class="mt-10 flex-1 space-y-1.5">
+        <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Menú</p>
+
+        <a href="dashboard.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+          Inicio
+        </a>
+
+        <a href="properties.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>
+          Propiedades
+        </a>
+
+        <a href="units.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
+          Unidades
+        </a>
+
+        <a href="invoices.html" class="flex items-center gap-3 rounded-xl bg-indigo-50 px-3 py-3 text-sm font-semibold text-indigo-600">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          Facturación
+        </a>
+
+        <a href="settings.html" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Ajustes
+        </a>
+      </nav>
+
+      <div class="rounded-2xl bg-slate-50 p-4">
+        <p class="text-sm font-semibold text-slate-900">¿Necesitas ayuda?</p>
+        <p class="mt-1 text-xs leading-relaxed text-slate-500">Contacta con el administrador de tu plataforma.</p>
+      </div>
+    </aside>
+
+    <!-- Contenido -->
+    <div class="flex min-w-0 flex-1 flex-col lg:pl-72">
+
+      <!-- Top bar -->
+      <header class="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-5 backdrop-blur-md sm:px-8">
+        <div class="flex items-center gap-3">
+          <button id="menu-btn" aria-label="Abrir menú" class="rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 lg:hidden">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          </button>
+          <div class="hidden sm:block">
+            <p class="text-sm text-slate-500">Facturación</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <div id="avatar" class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">A</div>
+            <div class="hidden text-right sm:block">
+              <p id="agent-name" class="text-sm font-semibold leading-tight text-slate-900">Agente</p>
+              <p id="agent-email" class="text-xs text-slate-500">Sesión activa</p>
+            </div>
+          </div>
+          <button id="logout-btn" class="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-600">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+            <span class="hidden sm:inline">Cerrar sesión</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main -->
+      <main class="flex-1 px-5 py-8 sm:px-8 sm:py-10">
+        <div class="mx-auto max-w-6xl">
+
+          <!-- Encabezado -->
+          <div class="fade-up flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 class="text-3xl font-bold tracking-tight text-slate-900">Facturación</h1>
+              <p id="subtitle" class="mt-2 text-slate-500">Controla tus comprobantes, cobros e impuestos.</p>
+            </div>
+            <button id="new-btn" class="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              Emitir Factura
+            </button>
+          </div>
+
+          <!-- Resumen -->
+          <section class="mt-8 grid gap-6 sm:grid-cols-2">
+            <article class="fade-up rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-shadow duration-300 hover:shadow-lg" style="animation-delay:.05s">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-medium text-slate-500">Total Facturado</p>
+                  <p id="sum-total" class="skeleton mt-3 text-4xl font-bold tracking-tight text-slate-900 text-transparent">RD$ 000,000</p>
+                </div>
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                </div>
+              </div>
+              <p id="sum-total-sub" class="mt-5 text-xs text-slate-400">Facturas no anuladas</p>
+            </article>
+
+            <article class="fade-up rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-shadow duration-300 hover:shadow-lg" style="animation-delay:.12s">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-medium text-slate-500">ITBIS Retenido</p>
+                  <p id="sum-itbis" class="skeleton mt-3 text-4xl font-bold tracking-tight text-slate-900 text-transparent">RD$ 000,000</p>
+                </div>
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                </div>
+              </div>
+              <p class="mt-5 text-xs text-slate-400">Impuesto acumulado en facturas vigentes</p>
+            </article>
+          </section>
+
+          <!-- Error -->
+          <div id="error-box" class="mt-8 hidden items-center justify-between gap-4 rounded-xl bg-rose-50 px-5 py-4 text-sm text-rose-700">
+            <span id="error-text"></span>
+            <button id="retry-btn" class="flex-none rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm transition hover:shadow-md">Reintentar</button>
+          </div>
+
+          <!-- Tabla -->
+          <section class="fade-up mt-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style="animation-delay:.18s">
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-left">
+                <thead>
+                  <tr class="border-b border-slate-100 bg-slate-50/60">
+                    <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Factura</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Cliente</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">NCF</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Monto Total</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+
+            <div id="empty" class="hidden px-6 py-16 text-center">
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+              </div>
+              <h3 class="mt-5 text-base font-semibold text-slate-900">Aún no hay facturas</h3>
+              <p class="mt-1.5 text-sm text-slate-500">Emite tu primera factura para verla aquí.</p>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal básico -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+    <div class="modal-in w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-8 shadow-lg">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight text-slate-900">Emitir factura</h2>
+          <p class="mt-1.5 text-sm text-slate-500">El formulario de emisión estará disponible próximamente.</p>
+        </div>
+        <button id="modal-close" aria-label="Cerrar" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="mt-8 flex justify-end">
+        <button id="modal-ok" class="rounded-xl bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const LOGIN_URL = 'index.html';
+    const API = '/api/v1';
+
+    // ---------- Sesión ----------
+    const getToken = () => localStorage.getItem('access_token');
+
+    const logout = () => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.replace(LOGIN_URL);
+    };
+
+    if (!getToken()) logout();
+
+    const $ = (id) => document.getElementById(id);
+    $('logout-btn').addEventListener('click', logout);
+
+    // ---------- Sidebar móvil ----------
+    const sidebar = $('sidebar');
+    const overlay = $('overlay');
+    const toggleMenu = (open) => {
+      sidebar.classList.toggle('-translate-x-full', !open);
+      overlay.classList.toggle('hidden', !open);
+    };
+    $('menu-btn').addEventListener('click', () => toggleMenu(true));
+    overlay.addEventListener('click', () => toggleMenu(false));
+
+    // ---------- Datos del agente (desde el JWT) ----------
+    const decodeJwt = (token) => {
+      try {
+        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(
+          atob(payload).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+        );
+        return JSON.parse(json);
+      } catch { return null; }
+    };
+
+    const claims = decodeJwt(getToken()) || {};
+    const email = claims.email || (typeof claims.sub === 'string' && claims.sub.includes('@') ? claims.sub : '');
+    const fullName = claims.full_name || claims.name || (email ? email.split('@')[0] : 'Agente');
+    const displayName = fullName.charAt(0).toUpperCase() + fullName.slice(1);
+
+    $('agent-name').textContent = displayName;
+    $('agent-email').textContent = email || 'Sesión activa';
+    $('avatar').textContent = displayName.charAt(0).toUpperCase();
+
+    // ---------- Modal ----------
+    const modal = $('modal');
+    const openModal = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); };
+    const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+    $('new-btn').addEventListener('click', openModal);
+    $('modal-close').addEventListener('click', closeModal);
+    $('modal-ok').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    // ---------- API ----------
+    const toList = (data) => {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.items)) return data.items;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data?.results)) return data.results;
+      return [];
+    };
+
+    const apiGet = async (path) => {
+      const res = await fetch(`${API}${path}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}`, 'Accept': 'application/json' }
+      });
+      if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
+      if (!res.ok) throw new Error(`El servidor respondió con error ${res.status}.`);
+      return toList(await res.json());
+    };
+
+    // ---------- Utilidades ----------
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const norm = (v) => String(v ?? '').trim().toLowerCase();
+    const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+    const money = (n) => 'RD$ ' + new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+
+    const getNumber = (i) => {
+      const raw = i.invoice_number ?? i.number ?? i.numero ?? i.code ?? i.sequence;
+      if (raw === null || raw === undefined || raw === '') return '—';
+      return /^\d+$/.test(String(raw)) ? 'F-' + String(raw).padStart(5, '0') : String(raw);
+    };
+    const getClient = (i) => {
+      const c = i.client_name ?? i.customer_name ?? i.client ?? i.customer ?? i.cliente ?? i.tenant_name;
+      if (c && typeof c === 'object') return c.name ?? c.full_name ?? c.nombre ?? '—';
+      return c || '—';
+    };
+    const getNcf = (i) => i.ncf ?? i.NCF ?? i.fiscal_number ?? '—';
+    const getTotal = (i) => num(i.total ?? i.total_amount ?? i.amount ?? i.monto_total ?? i.monto);
+    const getItbis = (i) => num(i.itbis_withheld ?? i.itbis_retenido ?? i.itbis ?? i.itbis_amount ?? i.tax_amount ?? i.tax);
+
+    const STATUS_MAP = {
+      issued:    { key: 'issued', label: 'Emitida', cls: 'bg-indigo-50 text-indigo-600',   dot: 'bg-indigo-500' },
+      emitida:   { key: 'issued', label: 'Emitida', cls: 'bg-indigo-50 text-indigo-600',   dot: 'bg-indigo-500' },
+      pending:   { key: 'issued', label: 'Emitida', cls: 'bg-indigo-50 text-indigo-600',   dot: 'bg-indigo-500' },
+      pendiente: { key: 'issued', label: 'Emitida', cls: 'bg-indigo-50 text-indigo-600',   dot: 'bg-indigo-500' },
+      sent:      { key: 'issued', label: 'Emitida', cls: 'bg-indigo-50 text-indigo-600',   dot: 'bg-indigo-500' },
+      paid:      { key: 'paid',   label: 'Pagada',  cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
+      pagada:    { key: 'paid',   label: 'Pagada',  cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
+      pagado:    { key: 'paid',   label: 'Pagada',  cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
+      void:      { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
+      voided:    { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
+      cancelled: { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
+      canceled:  { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
+      anulada:   { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
+      anulado:   { key: 'void',   label: 'Anulada', cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' }
+    };
+    const getStatus = (i) => {
+      let raw = norm(i.status ?? i.estado);
+      if (!raw && typeof i.is_paid === 'boolean') raw = i.is_paid ? 'paid' : 'issued';
+      return STATUS_MAP[raw] ?? {
+        key: 'other',
+        label: raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Sin estado',
+        cls: 'bg-slate-100 text-slate-500',
+        dot: 'bg-slate-400'
+      };
+    };
+
+    // ---------- Render ----------
+    const tbody = $('tbody');
+    const empty = $('empty');
+    const errorBox = $('error-box');
+
+    const setSummary = (id, text, loading) => {
+      const el = $(id);
+      el.classList.toggle('skeleton', loading);
+      el.classList.toggle('text-transparent', loading);
+      el.textContent = text;
+    };
+
+    const renderSkeletons = () => {
+      empty.classList.add('hidden');
+      setSummary('sum-total', 'RD$ 000,000', true);
+      setSummary('sum-itbis', 'RD$ 000,000', true);
+      tbody.innerHTML = Array.from({ length: 6 }, () => `
+        <tr>
+          <td class="px-6 py-5"><div class="skeleton h-4 w-20"></div></td>
+          <td class="px-6 py-5"><div class="skeleton h-4 w-36"></div></td>
+          <td class="px-6 py-5"><div class="skeleton h-4 w-28"></div></td>
+          <td class="px-6 py-5"><div class="skeleton h-4 w-24"></div></td>
+          <td class="px-6 py-5"><div class="skeleton h-7 w-24 !rounded-full"></div></td>
+        </tr>`).join('');
+    };
+
+    const row = (i) => {
+      const st = getStatus(i);
+      const voided = st.key === 'void';
+      return `
+        <tr class="transition hover:bg-slate-50/70">
+          <td class="whitespace-nowrap px-6 py-5 text-sm font-semibold text-slate-900">${esc(getNumber(i))}</td>
+          <td class="whitespace-nowrap px-6 py-5 text-sm text-slate-700">${esc(getClient(i))}</td>
+          <td class="whitespace-nowrap px-6 py-5 font-mono text-xs text-slate-500">${esc(getNcf(i))}</td>
+          <td class="whitespace-nowrap px-6 py-5 text-sm font-medium ${voided ? 'text-slate-400 line-through' : 'text-slate-700'}">${esc(money(getTotal(i)))}</td>
+          <td class="whitespace-nowrap px-6 py-5">
+            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${st.cls}">
+              <span class="h-1.5 w-1.5 rounded-full ${st.dot}"></span>${esc(st.label)}
+            </span>
+          </td>
+        </tr>`;
+    };
+
+    const render = (invoices) => {
+      const valid = invoices.filter((i) => getStatus(i).key !== 'void');
+      setSummary('sum-total', money(valid.reduce((s, i) => s + getTotal(i), 0)), false);
+      setSummary('sum-itbis', money(valid.reduce((s, i) => s + getItbis(i), 0)), false);
+      $('sum-total-sub').textContent = `${valid.length} de ${invoices.length} facturas vigentes`;
+      $('subtitle').textContent = invoices.length
+        ? `${invoices.length} ${invoices.length === 1 ? 'factura registrada' : 'facturas registradas'}.`
+        : 'Controla tus comprobantes, cobros e impuestos.';
+
+      if (!invoices.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      tbody.innerHTML = invoices.map(row).join('');
+    };
+
+    const load = async () => {
+      errorBox.classList.add('hidden');
+      errorBox.classList.remove('flex');
+      renderSkeletons();
+      try {
+        render(await apiGet('/invoices'));
+      } catch (err) {
+        tbody.innerHTML = '';
+        setSummary('sum-total', '—', false);
+        setSummary('sum-itbis', '—', false);
+        $('error-text').textContent = err instanceof TypeError
+          ? 'Error de conexión con el servidor.'
+          : err.message;
+        errorBox.classList.remove('hidden');
+        errorBox.classList.add('flex');
+      }
+    };
+
+    $('retry-btn').addEventListener('click', load);
+    load();
+  </script>
+</body>
+</html>
