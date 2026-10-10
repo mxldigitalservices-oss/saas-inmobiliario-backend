@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Superadmin · SaaS Inmobiliario</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+      <div>
+        <h1 class="text-lg font-semibold text-slate-900">Panel de Superadministrador</h1>
+        <p class="text-xs text-slate-500">Agencias y licencias · SaaS Inmobiliario</p>
+      </div>
+      <button id="logout-btn" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6">
+
+    <!-- Pestañas -->
+    <div class="mb-6 flex gap-2 border-b border-slate-200">
+      <button data-tab="tenants" class="tab-btn -mb-px border-b-2 border-indigo-600 px-4 py-2 text-sm font-semibold text-indigo-600">Agencias</button>
+      <button data-tab="licenses" class="tab-btn -mb-px border-b-2 border-transparent px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700">Licencias</button>
+    </div>
+
+    <!-- ===================== AGENCIAS ===================== -->
+    <section id="tab-tenants">
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <input id="t-q" type="search" placeholder="Buscar por nombre o slug…"
+          class="w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        <select id="t-status" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Todos los estados</option>
+          <option value="trial">Prueba</option>
+          <option value="active">Activa</option>
+          <option value="expired">Vencida</option>
+          <option value="suspended">Suspendida</option>
+        </select>
+        <button id="t-new" class="ml-auto rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+          + Nueva agencia
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3">Agencia</th>
+              <th class="px-4 py-3">Slug</th>
+              <th class="px-4 py-3">Plan</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Vence</th>
+              <th class="px-4 py-3">Creada</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="t-body"></tbody>
+        </table>
+      </div>
+      <div class="mt-3 flex items-center justify-between text-sm text-slate-500">
+        <span id="t-info"></span>
+        <div class="flex gap-2">
+          <button id="t-prev" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:bg-slate-50 disabled:opacity-40">Anterior</button>
+          <button id="t-next" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:bg-slate-50 disabled:opacity-40">Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== LICENCIAS ===================== -->
+    <section id="tab-licenses" class="hidden">
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <select id="l-status" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Todos los estados</option>
+          <option value="unused">Sin usar</option>
+          <option value="redeemed">Canjeada</option>
+          <option value="revoked">Revocada</option>
+          <option value="expired">Expirada</option>
+        </select>
+        <button id="l-new" class="ml-auto rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+          + Generar licencias
+        </button>
+      </div>
+
+      <div id="l-result" class="mb-4 hidden rounded-xl border border-amber-200 bg-amber-50 p-4"></div>
+
+      <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3">Prefijo</th>
+              <th class="px-4 py-3">Plan</th>
+              <th class="px-4 py-3">Días</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Canjeada</th>
+              <th class="px-4 py-3">Creada</th>
+              <th class="px-4 py-3">Notas</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="l-body"></tbody>
+        </table>
+      </div>
+      <div class="mt-3 flex items-center justify-between text-sm text-slate-500">
+        <span id="l-info"></span>
+        <div class="flex gap-2">
+          <button id="l-prev" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:bg-slate-50 disabled:opacity-40">Anterior</button>
+          <button id="l-next" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:bg-slate-50 disabled:opacity-40">Siguiente</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal genérico -->
+  <div id="modal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-900/50 p-4">
+    <div id="modal-box" class="mt-10 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 right-4 z-50 hidden max-w-sm rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg"></div>
+
+  <script type="module">
+    const API = '/api/v1/admin';
+    const LOGIN_URL = 'index.html';
+    const DASHBOARD_URL = 'dashboard.html';
+
+    const $ = (id) => document.getElementById(id);
+    const getToken = () => localStorage.getItem('access_token');
+
+    const logout = () => {
+      ['access_token', 'refresh_token', 'auth_audience'].forEach((k) => localStorage.removeItem(k));
+      window.location.replace(LOGIN_URL);
+    };
+
+    // ---------- Protección de ruta ----------
+    let allowed = true;
+    if (!getToken()) {
+      allowed = false;
+      window.location.replace(LOGIN_URL);
+    } else if (localStorage.getItem('auth_audience') !== 'superadmin') {
+      allowed = false;
+      window.location.replace(DASHBOARD_URL);
+    }
+
+    // ---------- Utilidades ----------
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+
+    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-DO') : '—');
+
+    const BADGE = {
+      trial: 'bg-amber-100 text-amber-800',
+      active: 'bg-emerald-100 text-emerald-800',
+      expired: 'bg-rose-100 text-rose-800',
+      suspended: 'bg-slate-200 text-slate-700',
+      unused: 'bg-sky-100 text-sky-800',
+      redeemed: 'bg-emerald-100 text-emerald-800',
+      revoked: 'bg-rose-100 text-rose-800'
+    };
+    const LABEL = {
+      trial: 'Prueba', active: 'Activa', expired: 'Vencida', suspended: 'Suspendida',
+      unused: 'Sin usar', redeemed: 'Canjeada', revoked: 'Revocada',
+      trial_30d: 'Prueba 30 días', annual: 'Anual', custom: 'Personalizado'
+    };
+    const label = (v) => (v ? (LABEL[v] || v) : '—');
+    const badge = (v) =>
+      `<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BADGE[v] || 'bg-slate-100 text-slate-700'}">${esc(label(v))}</span>`;
+
+    const extractMessage = (data, fallback) => {
+      if (!data) return fallback;
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+      if (data.detail?.message) return data.detail.message;
+      if (data.message) return data.message;
+      return fallback;
+    };
+
+    const toast = (msg, ok = true) => {
+      const el = $('toast');
+      el.textContent = msg;
+      el.className = 'fixed bottom-4 right-4 z-50 max-w-sm rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ' +
+        (ok ? 'bg-emerald-600' : 'bg-rose-600');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.add('hidden'), 4000);
+    };
+
+    const api = async (path, opts = {}) => {
+      const res = await fetch(`${API}${path}`, {
+        method: opts.method || 'GET',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Accept': 'application/json',
+          ...(opts.body ? { 'Content-Type': 'application/json' } : {})
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+      if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
+      let data = null;
+      try { data = await res.json(); } catch (_) { /* sin JSON */ }
+      if (!res.ok) throw new Error(extractMessage(data, `Error ${res.status}`));
+      return data;
+    };
+
+    const fieldCls = 'block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500';
+    const btnPrimary = 'rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60';
+    const btnGhost = 'rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50';
+
+    // ---------- Modal ----------
+    const openModal = (html) => {
+      $('modal-box').innerHTML = html;
+      $('modal').classList.remove('hidden');
+      $('modal').classList.add('flex');
+    };
+    const closeModal = () => {
+      $('modal').classList.add('hidden');
+      $('modal').classList.remove('flex');
+      $('modal-box').innerHTML = '';
+    };
+    $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
+
+    // ---------- Pestañas ----------
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('border-indigo-600', on);
+          b.classList.toggle('text-indigo-600', on);
+          b.classList.toggle('border-transparent', !on);
+          b.classList.toggle('text-slate-500', !on);
+        });
+        $('tab-tenants').classList.toggle('hidden', tab !== 'tenants');
+        $('tab-licenses').classList.toggle('hidden', tab !== 'licenses');
+        if (tab === 'licenses') loadLicenses();
+      });
+    });
+
+    $('logout-btn').addEventListener('click', logout);
+
+    // ====================================================================
+    // AGENCIAS
+    // ====================================================================
+    const tState = { page: 1, pages: 1 };
+
+    const loadTenants = async () => {
+      const params = new URLSearchParams({ page: tState.page, page_size: 10 });
+      const q = $('t-q').value.trim();
+      if (q) params.set('q', q);
+      const st = $('t-status').value;
+      if (st) params.set('subscription_status', st);
+
+      $('t-body').innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">Cargando…</td></tr>';
+      try {
+        const d = await api(`/tenants?${params}`);
+        tState.pages = d.pages || 1;
+        if (!d.items.length) {
+          $('t-body').innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">No hay agencias.</td></tr>';
+        } else {
+          $('t-body').innerHTML = d.items.map((t) => {
+            const id = t.id ?? t._id;
+            return `<tr class="border-t border-slate-100">
+              <td class="px-4 py-3 font-medium text-slate-900">${esc(t.name)}</td>
+              <td class="px-4 py-3 text-slate-500">${esc(t.slug)}</td>
+              <td class="px-4 py-3">${esc(label(t.subscription?.plan))}</td>
+              <td class="px-4 py-3">${badge(t.subscription?.status)}</td>
+              <td class="px-4 py-3">${fmtDate(t.subscription?.expires_at)}</td>
+              <td class="px-4 py-3">${fmtDate(t.created_at)}</td>
+              <td class="px-4 py-3 text-right">
+                <button data-act="manage" data-id="${esc(id)}" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50">Gestionar</button>
+              </td>
+            </tr>`;
+          }).join('');
+        }
+        $('t-info').textContent = `Página ${d.page} de ${tState.pages} · ${d.total} agencia(s)`;
+        $('t-prev').disabled = tState.page <= 1;
+        $('t-next').disabled = tState.page >= tState.pages;
+      } catch (err) {
+        $('t-body').innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-rose-600">${esc(err.message)}</td></tr>`;
+      }
+    };
+
+    let searchTimer;
+    $('t-q').addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { tState.page = 1; loadTenants(); }, 350);
+    });
+    $('t-status').addEventListener('change', () => { tState.page = 1; loadTenants(); });
+    $('t-prev').addEventListener('click', () => { if (tState.page > 1) { tState.page--; loadTenants(); } });
+    $('t-next').addEventListener('click', () => { if (tState.page < tState.pages) { tState.page++; loadTenants(); } });
+
+    $('t-body').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-act="manage"]');
+      if (btn) manageTenant(btn.dataset.id);
+    });
+
+    // ---------- Gestionar agencia ----------
+    const renderManage = (t) => {
+      const id = t.id ?? t._id;
+      const sub = t.subscription || {};
+      const domains = (t.domains || []).map((d) => `
+        <tr class="border-t border-slate-100">
+          <td class="px-3 py-2">${esc(d.host)}</td>
+          <td class="px-3 py-2">${d.verified ? badge('active').replace('Activa', 'Verificado') : badge('trial').replace('Prueba', 'Sin verificar')}</td>
+          <td class="px-3 py-2 text-right">
+            ${d.verified ? '' : `<button data-act="verify" data-host="${esc(d.host)}" class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50">Verificar</button>`}
+          </td>
+        </tr>`).join('');
+      const lim = t.limits || {};
+
+      openModal(`
+        <div class="mb-4 flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">${esc(t.name)}</h2>
+            <p class="text-xs text-slate-500">${esc(t.slug)} · ID ${esc(id)}</p>
+          </div>
+          <button data-act="close" class="text-slate-400 hover:text-slate-600" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="mb-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div><p class="text-xs text-slate-500">Estado</p>${badge(sub.status)}</div>
+          <div><p class="text-xs text-slate-500">Plan</p><p>${esc(label(sub.plan))}</p></div>
+          <div><p class="text-xs text-slate-500">Vence</p><p>${fmtDate(sub.expires_at)}</p></div>
+          <div><p class="text-xs text-slate-500">Solo lectura</p><p>${t.read_only ? 'Sí' : 'No'}</p></div>
+        </div>
+
+        <div class="mb-5 rounded-xl border border-slate-200 p-4">
+          <h3 class="mb-3 text-sm font-semibold text-slate-700">Suscripción</h3>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-xs text-slate-500">Estado</label>
+              <select id="m-status" class="${fieldCls}">
+                ${['trial', 'active', 'expired', 'suspended'].map((s) =>
+                  `<option value="${s}" ${sub.status === s ? 'selected' : ''}>${label(s)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-xs text-slate-500">Plan</label>
+              <select id="m-plan" class="${fieldCls}">
+                <option value="">(sin cambio)</option>
+                ${['trial_30d', 'annual', 'custom'].map((p) =>
+                  `<option value="${p}" ${sub.plan === p ? 'selected' : ''}>${label(p)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button data-act="save-sub" class="${btnPrimary} w-full">Guardar</button>
+            </div>
+          </div>
+          <div class="mt-4 flex items-end gap-3">
+            <div class="flex-1">
+              <label class="mb-1 block text-xs text-slate-500">Extender suscripción (días)</label>
+              <input id="m-extend" type="number" min="1" max="3650" placeholder="30" class="${fieldCls}">
+            </div>
+            <button data-act="extend" class="${btnPrimary}">Extender</button>
+          </div>
+        </div>
+
+        <div class="mb-5 rounded-xl border border-slate-200">
+          <h3 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Dominios</h3>
+          ${domains
+            ? `<table class="min-w-full text-left text-sm"><tbody>${domains}</tbody></table>`
+            : '<p class="px-4 py-3 text-sm text-slate-400">Esta agencia no tiene dominios registrados.</p>'}
+        </div>
+
+        <div class="text-xs text-slate-500">
+          Límites: ${esc(lim.max_users ?? '—')} usuarios · ${esc(lim.max_properties ?? '—')} propiedades · ${esc(lim.max_media_mb ?? '—')} MB de medios
+        </div>
+
+        <div class="mt-5 flex justify-end">
+          <button data-act="close" class="${btnGhost}">Cerrar</button>
+        </div>
+      `);
+      $('modal-box').dataset.tenantId = id;
+    };
+
+    const manageTenant = async (id) => {
+      try {
+        renderManage(await api(`/tenants/${encodeURIComponent(id)}`));
+      } catch (err) { toast(err.message, false); }
+    };
+
+    $('modal-box').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      const tenantId = $('modal-box').dataset.tenantId;
+
+      if (act === 'close') { closeModal(); return; }
+
+      try {
+        if (act === 'save-sub') {
+          const body = { status: $('m-status').value };
+          if ($('m-plan').value) body.plan = $('m-plan').value;
+          const t = await api(`/tenants/${encodeURIComponent(tenantId)}/subscription`, { method: 'PATCH', body });
+          renderManage(t); toast('Suscripción actualizada'); loadTenants();
+        } else if (act === 'extend') {
+          const days = parseInt($('m-extend').value, 10);
+          if (!days || days < 1) { toast('Indica un número de días válido', false); return; }
+          const t = await api(`/tenants/${encodeURIComponent(tenantId)}/subscription`, { method: 'PATCH', body: { extend_days: days } });
+          renderManage(t); toast(`Suscripción extendida ${days} día(s)`); loadTenants();
+        } else if (act === 'verify') {
+          const host = btn.dataset.host;
+          const t = await api(`/tenants/${encodeURIComponent(tenantId)}/domains/${encodeURIComponent(host)}/verify`, { method: 'POST' });
+          renderManage(t); toast('Dominio verificado');
+        }
+      } catch (err) { toast(err.message, false); }
+    });
+
+    // ---------- Nueva agencia ----------
+    $('t-new').addEventListener('click', () => {
+      openModal(`
+        <div class="mb-4 flex items-start justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Nueva agencia</h2>
+          <button data-act="close" class="text-slate-400 hover:text-slate-600" aria-label="Cerrar">✕</button>
+        </div>
+        <form id="new-tenant-form" class="grid gap-4 sm:grid-cols-2" novalidate>
+          <div><label class="mb-1 block text-xs text-slate-500">Nombre de la agencia</label>
+            <input id="nt-name" required class="${fieldCls}" placeholder="Inmobiliaria Demo"></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Slug (minúsculas, números y guiones)</label>
+            <input id="nt-slug" required class="${fieldCls}" placeholder="inmobiliaria-demo"></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Nombre del propietario</label>
+            <input id="nt-owner-name" required class="${fieldCls}"></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Correo del propietario</label>
+            <input id="nt-owner-email" type="email" required class="${fieldCls}"></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Contraseña (8+ caracteres, letras y números)</label>
+            <input id="nt-password" type="password" required class="${fieldCls}" autocomplete="new-password"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="mb-1 block text-xs text-slate-500">Plan</label>
+              <select id="nt-plan" class="${fieldCls}">
+                <option value="trial_30d">Prueba 30 días</option>
+                <option value="annual">Anual</option>
+                <option value="custom">Personalizado</option>
+              </select></div>
+            <div><label class="mb-1 block text-xs text-slate-500">Duración (días)</label>
+              <input id="nt-days" type="number" min="1" max="3650" value="30" class="${fieldCls}"></div>
+          </div>
+          <p id="nt-error" class="hidden text-sm text-rose-600 sm:col-span-2"></p>
+          <div class="flex justify-end gap-2 sm:col-span-2">
+            <button type="button" data-act="close" class="${btnGhost}">Cancelar</button>
+            <button type="submit" id="nt-submit" class="${btnPrimary}">Crear agencia</button>
+          </div>
+        </form>
+      `);
+
+      $('new-tenant-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const errBox = $('nt-error');
+        errBox.classList.add('hidden');
+        const body = {
+          name: $('nt-name').value.trim(),
+          slug: $('nt-slug').value.trim().toLowerCase(),
+          owner_full_name: $('nt-owner-name').value.trim(),
+          owner_email: $('nt-owner-email').value.trim(),
+          owner_password: $('nt-password').value,
+          plan: $('nt-plan').value,
+          duration_days: parseInt($('nt-days').value, 10) || 30
+        };
+        if (!body.name || !body.slug || !body.owner_full_name || !body.owner_email || !body.owner_password) {
+          errBox.textContent = 'Completa todos los campos.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+        $('nt-submit').disabled = true;
+        try {
+          await api('/tenants', { method: 'POST', body });
+          closeModal();
+          toast('Agencia creada');
+          tState.page = 1;
+          loadTenants();
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('hidden');
+          $('nt-submit').disabled = false;
+        }
+      });
+    });
+
+    // ====================================================================
+    // LICENCIAS
+    // ====================================================================
+    const lState = { page: 1, pages: 1 };
+
+    const loadLicenses = async () => {
+      const params = new URLSearchParams({ page: lState.page, page_size: 10 });
+      const st = $('l-status').value;
+      if (st) params.set('license_status', st);
+
+      $('l-body').innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">Cargando…</td></tr>';
+      try {
+        const d = await api(`/licenses?${params}`);
+        lState.pages = d.pages || 1;
+        if (!d.items.length) {
+          $('l-body').innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">No hay licencias.</td></tr>';
+        } else {
+          $('l-body').innerHTML = d.items.map((l) => {
+            const id = l.id ?? l._id;
+            return `<tr class="border-t border-slate-100">
+              <td class="px-4 py-3 font-mono text-xs">${esc(l.token_prefix)}…</td>
+              <td class="px-4 py-3">${esc(label(l.plan))}</td>
+              <td class="px-4 py-3">${esc(l.duration_days)}</td>
+              <td class="px-4 py-3">${badge(l.status)}</td>
+              <td class="px-4 py-3">${fmtDate(l.redeemed_at)}</td>
+              <td class="px-4 py-3">${fmtDate(l.created_at)}</td>
+              <td class="max-w-[14rem] truncate px-4 py-3 text-slate-500" title="${esc(l.notes || '')}">${esc(l.notes || l.payment_ref || '—')}</td>
+              <td class="px-4 py-3 text-right">
+                ${l.status === 'unused'
+                  ? `<button data-act="revoke" data-id="${esc(id)}" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50">Revocar</button>`
+                  : ''}
+              </td>
+            </tr>`;
+          }).join('');
+        }
+        $('l-info').textContent = `Página ${d.page} de ${lState.pages} · ${d.total} licencia(s)`;
+        $('l-prev').disabled = lState.page <= 1;
+        $('l-next').disabled = lState.page >= lState.pages;
+      } catch (err) {
+        $('l-body').innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-600">${esc(err.message)}</td></tr>`;
+      }
+    };
+
+    $('l-status').addEventListener('change', () => { lState.page = 1; loadLicenses(); });
+    $('l-prev').addEventListener('click', () => { if (lState.page > 1) { lState.page--; loadLicenses(); } });
+    $('l-next').addEventListener('click', () => { if (lState.page < lState.pages) { lState.page++; loadLicenses(); } });
+
+    $('l-body').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-act="revoke"]');
+      if (!btn) return;
+      const reason = prompt('Motivo de la revocación (opcional):');
+      if (reason === null) return;
+      try {
+        await api(`/licenses/${encodeURIComponent(btn.dataset.id)}/revoke`, {
+          method: 'POST',
+          body: reason.trim() ? { reason: reason.trim() } : {}
+        });
+        toast('Licencia revocada');
+        loadLicenses();
+      } catch (err) { toast(err.message, false); }
+    });
+
+    // ---------- Generar licencias ----------
+    $('l-new').addEventListener('click', () => {
+      openModal(`
+        <div class="mb-4 flex items-start justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Generar licencias</h2>
+          <button data-act="close" class="text-slate-400 hover:text-slate-600" aria-label="Cerrar">✕</button>
+        </div>
+        <form id="new-license-form" class="grid gap-4 sm:grid-cols-3" novalidate>
+          <div><label class="mb-1 block text-xs text-slate-500">Plan</label>
+            <select id="nl-plan" class="${fieldCls}">
+              <option value="trial_30d">Prueba 30 días</option>
+              <option value="annual">Anual</option>
+              <option value="custom">Personalizado</option>
+            </select></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Duración en días (obligatorio si es personalizado)</label>
+            <input id="nl-days" type="number" min="1" max="3650" class="${fieldCls}" placeholder="Automática"></div>
+          <div><label class="mb-1 block text-xs text-slate-500">Cantidad (1 a 100)</label>
+            <input id="nl-qty" type="number" min="1" max="100" value="1" class="${fieldCls}"></div>
+          <div class="sm:col-span-3"><label class="mb-1 block text-xs text-slate-500">Referencia de pago (opcional)</label>
+            <input id="nl-ref" maxlength="120" class="${fieldCls}"></div>
+          <div class="sm:col-span-3"><label class="mb-1 block text-xs text-slate-500">Notas (opcional)</label>
+            <input id="nl-notes" maxlength="500" class="${fieldCls}"></div>
+          <p id="nl-error" class="hidden text-sm text-rose-600 sm:col-span-3"></p>
+          <div class="flex justify-end gap-2 sm:col-span-3">
+            <button type="button" data-act="close" class="${btnGhost}">Cancelar</button>
+            <button type="submit" id="nl-submit" class="${btnPrimary}">Generar</button>
+          </div>
+        </form>
+      `);
+
+      $('new-license-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const errBox = $('nl-error');
+        errBox.classList.add('hidden');
+        const body = {
+          plan: $('nl-plan').value,
+          quantity: parseInt($('nl-qty').value, 10) || 1
+        };
+        const days = parseInt($('nl-days').value, 10);
+        if (days) body.duration_days = days;
+        if ($('nl-ref').value.trim()) body.payment_ref = $('nl-ref').value.trim();
+        if ($('nl-notes').value.trim()) body.notes = $('nl-notes').value.trim();
+
+        $('nl-submit').disabled = true;
+        try {
+          const d = await api('/licenses', { method: 'POST', body });
+          closeModal();
+          showCreatedTokens(d.items || []);
+          lState.page = 1;
+          loadLicenses();
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('hidden');
+          $('nl-submit').disabled = false;
+        }
+      });
+    });
+
+    const showCreatedTokens = (items) => {
+      const box = $('l-result');
+      box.innerHTML = `
+        <p class="mb-2 text-sm font-semibold text-amber-900">
+          Copia los tokens ahora: solo se muestran esta vez.
+        </p>
+        <ul class="space-y-2">
+          ${items.map((it) => `
+            <li class="flex items-center gap-2">
+              <code class="flex-1 overflow-x-auto rounded bg-white px-3 py-2 text-xs text-slate-800">${esc(it.token)}</code>
+              <button data-copy="${esc(it.token)}" class="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">Copiar</button>
+            </li>`).join('')}
+        </ul>
+        <div class="mt-3 text-right">
+          <button id="l-result-close" class="text-xs font-medium text-amber-900 underline">Ocultar</button>
+        </div>`;
+      box.classList.remove('hidden');
+    };
+
+    $('l-result').addEventListener('click', async (e) => {
+      const copyBtn = e.target.closest('[data-copy]');
+      if (copyBtn) {
+        try {
+          await navigator.clipboard.writeText(copyBtn.dataset.copy);
+          toast('Token copiado');
+        } catch (_) { toast('No se pudo copiar; selecciónalo manualmente', false); }
+        return;
+      }
+      if (e.target.id === 'l-result-close') {
+        $('l-result').classList.add('hidden');
+        $('l-result').innerHTML = '';
+      }
+    });
+
+    // ---------- Inicio ----------
+    if (allowed) loadTenants();
+  </script>
+</body>
+</html>

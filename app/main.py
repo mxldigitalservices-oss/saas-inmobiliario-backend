@@ -37,6 +37,7 @@ FRONTEND_PAGES = (
     "units",
     "invoices",
     "settings",
+    "admin",
 )
 
 
