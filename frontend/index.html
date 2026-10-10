@@ -80,6 +80,11 @@
             </div>
           </div>
 
+          <label class="flex items-center gap-2 text-sm text-slate-600">
+            <input id="is-superadmin" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            Acceso de superadministrador
+          </label>
+
           <button id="submit-btn" type="submit"
             class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70">
             <svg id="spinner" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -97,6 +102,7 @@
 
   <script type="module">
     const API_URL = '/api/v1/auth/login';
+    const SUPERADMIN_API_URL = '/api/v1/auth/superadmin/login';
     const DASHBOARD_URL = 'dashboard.html';
 
     const $ = (id) => document.getElementById(id);
@@ -166,7 +172,8 @@
         // Se envía como JSON; si tu endpoint usa OAuth2PasswordRequestForm,
         // cambia body por: new URLSearchParams({ username: email, password })
         // y Content-Type por 'application/x-www-form-urlencoded'.
-        const response = await fetch(API_URL, {
+        const isSuper = $('is-superadmin').checked;
+        const response = await fetch(isSuper ? SUPERADMIN_API_URL : API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -187,6 +194,7 @@
         }
 
         localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('auth_audience', isSuper ? 'superadmin' : 'tenant');
         if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
 
         window.location.href = DASHBOARD_URL;
