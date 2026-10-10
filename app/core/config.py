@@ -67,6 +67,9 @@ class Settings:
         self.PG_AUTO_CREATE_TABLES = (
             os.getenv("PG_AUTO_CREATE_TABLES", "true").lower() == "true"
         )
+        # Redis (Railway expone REDIS_URL en el servicio Redis)
+        self.REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.REDIS_DEFAULT_TTL = int(os.getenv("REDIS_DEFAULT_TTL", "300"))
         self.SUPERADMIN_EMAIL = (os.getenv("SUPERADMIN_EMAIL") or "").strip().lower()
         self.SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD") or ""
 

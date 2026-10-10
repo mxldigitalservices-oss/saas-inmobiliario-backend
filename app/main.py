@@ -1,7 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
+from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.bootstrap import ensure_super_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
+from app.core.redis_client import close_redis, get_redis, init_redis
 from app.core.postgres_db import close_postgres, get_db, init_postgres
 from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
@@ -26,11 +28,13 @@ API_PREFIX = "/api/v1"
 async def lifespan(app: FastAPI):
     await init_db()
     await init_postgres()
+    await init_redis()
     try:
         await ensure_super_admin()
     except Exception:  # pragma: no cover
         logger.exception("No se pudo crear el Super Admin inicial")
     yield
+    await close_redis()
     await close_postgres()
     await close_db()
 
@@ -74,3 +78,12 @@ async def health():
 async def health_postgres(db: AsyncSession = Depends(get_db)):
     await db.execute(text("SELECT 1"))
     return {"status": "ok", "postgres": "connected"}
+
+
+@app.get("/health/redis", tags=["health"])
+async def health_redis(redis: Redis = Depends(get_redis)):
+    try:
+        await redis.ping()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Redis no responde")
+    return {"status": "ok", "redis": "connected"}
