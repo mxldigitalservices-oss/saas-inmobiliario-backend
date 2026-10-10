@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
-beanie
-motor
+beanie>=2.0
+pymongo>=4.11
 pydantic
-pymongo
 dnspython
