@@ -33,3 +33,10 @@ async def close_db() -> None:
     if _client is not None:
         await _client.close()
         _client = None
+
+
+async def ping_db() -> None:
+    """Lanza excepción si MongoDB no responde (usado por el health check)."""
+    if _client is None:
+        raise RuntimeError("Cliente MongoDB no inicializado")
+    await _client.admin.command("ping")

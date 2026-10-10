@@ -70,6 +70,14 @@ class Settings:
         # Redis (Railway expone REDIS_URL en el servicio Redis)
         self.REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
         self.REDIS_DEFAULT_TTL = int(os.getenv("REDIS_DEFAULT_TTL", "300"))
+        # Diagnóstico: si defines HEALTH_TOKEN, /status exige el header X-Health-Token
+        self.HEALTH_TOKEN = os.getenv("HEALTH_TOKEN", "")
+        # Keep-alive (solo útil si activaste Serverless/App Sleeping en Railway)
+        self.KEEPALIVE_ENABLED = os.getenv("KEEPALIVE_ENABLED", "false").lower() == "true"
+        # Railway duerme tras 10 min sin tráfico saliente: por defecto 8 min (480 s)
+        self.KEEPALIVE_INTERVAL_SECONDS = int(os.getenv("KEEPALIVE_INTERVAL_SECONDS", "480"))
+        self.KEEPALIVE_URL = os.getenv("KEEPALIVE_URL", "")
+        self.RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
         self.SUPERADMIN_EMAIL = (os.getenv("SUPERADMIN_EMAIL") or "").strip().lower()
         self.SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD") or ""
 

@@ -10,11 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.bootstrap import ensure_super_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
+from app.core.keepalive import start_keepalive, stop_keepalive
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.core.postgres_db import close_postgres, get_db, init_postgres
 from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
 from app.routes import expense as expense_routes
+from app.routes import health as health_routes
 from app.routes import invoice as invoice_routes
 from app.routes import property as property_routes
 from app.routes import tenant as tenant_routes
@@ -29,11 +31,13 @@ async def lifespan(app: FastAPI):
     await init_db()
     await init_postgres()
     await init_redis()
+    start_keepalive()
     try:
         await ensure_super_admin()
     except Exception:  # pragma: no cover
         logger.exception("No se pudo crear el Super Admin inicial")
     yield
+    await stop_keepalive()
     await close_redis()
     await close_postgres()
     await close_db()
@@ -55,6 +59,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(health_routes.router)
 app.include_router(auth_routes.router, prefix=API_PREFIX)
 app.include_router(tenant_routes.router, prefix=API_PREFIX)
 app.include_router(admin_routes.router, prefix=API_PREFIX)
