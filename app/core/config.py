@@ -25,6 +25,13 @@ class Settings:
         self.ALLOW_TENANT_HEADER = (
             os.getenv("ALLOW_TENANT_HEADER", default_header).lower() == "true"
         )
+        # Railway expone MONGO_URL en su plantilla de MongoDB; MONGODB_URL tiene prioridad
+        self.MONGODB_URL = (
+            os.getenv("MONGODB_URL")
+            or os.getenv("MONGO_URL")
+            or "mongodb://localhost:27017"
+        )
+        self.MONGODB_DB = os.getenv("MONGODB_DB", "inmobiliaria_saas")
         self.SUPERADMIN_EMAIL = (os.getenv("SUPERADMIN_EMAIL") or "").strip().lower()
         self.SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD") or ""
 
