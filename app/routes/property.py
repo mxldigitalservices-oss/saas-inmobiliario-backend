@@ -14,17 +14,23 @@ from app.core.deps import (
     get_current_tenant,
     get_page_params,
     require_roles,
-    resolve_tenant,
+    resolve_public_tenant,
 )
 from app.models.enums import (
     Lifecycle,
+    MediaKind,
+    MediaOwnerType,
+    MediaStatus,
     OperationType,
     PropertyKind,
     PropertyType,
     PublishStatus,
+    UnitAvailability,
 )
+from app.models.media import Media
 from app.models.property import Property
 from app.models.tenant import Tenant
+from app.models.unit import Unit
 from app.models.user import User
 from app.schemas.common import Page, PageParams, slugify
 from app.schemas.property import (
@@ -33,6 +39,9 @@ from app.schemas.property import (
     PropertyListItem,
     PropertyOut,
     PropertyUpdate,
+    PublicMediaOut,
+    PublicPropertyOut,
+    PublicUnitOut,
 )
 
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -146,6 +155,15 @@ def _build_query(tenant_id, f: PropertyFilter, *, public: bool = False) -> Dict[
     return query
 
 
+async def _cover_map(tenant_id, docs) -> Dict[Any, Media]:
+    """Carga en UNA consulta las portadas de una página de propiedades (evita N+1)."""
+    ids = [d.cover_media_id for d in docs if d.cover_media_id is not None]
+    if not ids:
+        return {}
+    covers = await Media.find({"tenant_id": tenant_id, "_id": {"$in": ids}}).to_list()
+    return {m.id: m for m in covers}
+
+
 async def _paginate(query: Dict[str, Any], params: PageParams) -> PropertyPage:
     total = await Property.find(query).count()
     docs = (
@@ -155,7 +173,15 @@ async def _paginate(query: Dict[str, Any], params: PageParams) -> PropertyPage:
         .limit(params.page_size)
         .to_list()
     )
-    items = [PropertyListItem.model_validate(doc) for doc in docs]
+    covers = await _cover_map(query["tenant_id"], docs)
+    items = []
+    for doc in docs:
+        item = PropertyListItem.model_validate(doc)
+        cover = covers.get(doc.cover_media_id)
+        if cover is not None:
+            item.cover_url = cover.storage.url
+            item.cover_thumb_url = cover.storage.thumb_url or cover.storage.url
+        items.append(item)
     return PropertyPage.build(items, total, params)
 
 
@@ -183,19 +209,20 @@ async def _unique_slug(tenant_id, base: str) -> str:
     raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se pudo generar un slug único")
 
 
-# ------------------------------------------------------- catálogo público (Host)
+# ------------------------------------------------------- catálogo público (Host / slug)
+# La agencia se resuelve con resolve_public_tenant: dominio propio o subdominio (Host)
+# y, solo en el host de la plataforma, ?agency=<slug>. Siempre se filtra por tenant_id.
 @router.get("/public", response_model=PropertyPage)
 async def list_public_properties(
     params: PageParams = Depends(get_page_params),
     flt: PropertyFilter = Depends(property_filter),
-    tenant: Tenant = Depends(resolve_tenant),
+    tenant: Tenant = Depends(resolve_public_tenant),
 ):
-    """Propiedades publicadas de la agencia identificada por el Host header."""
+    """Propiedades publicadas de la agencia (con URL de portada lista para pintar)."""
     return await _paginate(_build_query(tenant.id, flt, public=True), params)
 
 
-@router.get("/public/{slug}", response_model=PropertyOut)
-async def get_public_property(slug: str, tenant: Tenant = Depends(resolve_tenant)):
+async def _published_by_slug(tenant: Tenant, slug: str) -> Property:
     prop = await Property.find_one(
         {
             "tenant_id": tenant.id,
@@ -206,6 +233,78 @@ async def get_public_property(slug: str, tenant: Tenant = Depends(resolve_tenant
     if prop is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propiedad no encontrada")
     return prop
+
+
+def _ordered_public_media(prop: Property, docs: List[Media]) -> List[Media]:
+    """Portada primero; el resto en el orden en que se subió."""
+    docs = sorted(docs, key=lambda m: m.created_at)
+    if prop.cover_media_id is not None:
+        docs.sort(key=lambda m: 0 if m.id == prop.cover_media_id else 1)  # estable
+    return docs
+
+
+@router.get("/public/{slug}", response_model=PublicPropertyOut)
+async def get_public_property(slug: str, tenant: Tenant = Depends(resolve_public_tenant)):
+    """Detalle público con TODA su multimedia (fotos y videos) ya lista para renderizar."""
+    prop = await _published_by_slug(tenant, slug)
+    # Se listan por owner_ref (fuente de verdad), no por prop.media_ids, para que una
+    # subida nunca "desaparezca" del catálogo aunque media_ids se haya desfasado.
+    docs = await Media.find(
+        {
+            "tenant_id": tenant.id,
+            "owner_ref.type": MediaOwnerType.PROPERTY.value,
+            "owner_ref.id": prop.id,
+            "status": MediaStatus.READY.value,
+        }
+    ).to_list()
+    docs = _ordered_public_media(prop, docs)
+
+    media = [
+        PublicMediaOut(
+            id=m.id,
+            kind=m.kind,
+            url=m.storage.url or "",
+            thumb_url=m.storage.thumb_url,
+            mime=m.processed.mime,
+            width=m.processed.width,
+            height=m.processed.height,
+            duration_sec=m.processed.duration_sec,
+        )
+        for m in docs
+        if m.storage.url
+    ]
+    out = PublicPropertyOut.model_validate(prop)
+    out.media = media
+    cover = next((m for m in docs if m.id == prop.cover_media_id and m.kind == MediaKind.IMAGE), None)
+    if cover is None:
+        cover = next((m for m in docs if m.kind == MediaKind.IMAGE), None)
+    if cover is not None:
+        out.cover_url = cover.storage.url
+        out.cover_thumb_url = cover.storage.thumb_url or cover.storage.url
+    return out
+
+
+@router.get("/public/{slug}/units", response_model=List[PublicUnitOut])
+async def list_public_units(slug: str, tenant: Tenant = Depends(resolve_public_tenant)):
+    """Unidades disponibles/reservadas de un proyecto publicado (las vendidas no se muestran)."""
+    prop = await _published_by_slug(tenant, slug)
+    if prop.kind != PropertyKind.PROJECT:
+        return []
+    docs = (
+        await Unit.find(
+            {
+                "tenant_id": tenant.id,
+                "property_id": prop.id,
+                "availability": {
+                    "$in": [UnitAvailability.AVAILABLE.value, UnitAvailability.RESERVED.value]
+                },
+            }
+        )
+        .sort("tower", "floor", "code")
+        .limit(300)
+        .to_list()
+    )
+    return [PublicUnitOut.model_validate(u) for u in docs]
 
 
 # ---------------------------------------------------------------- panel interno

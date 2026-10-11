@@ -80,6 +80,11 @@ class Settings:
         self.RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
         self.SUPERADMIN_EMAIL = (os.getenv("SUPERADMIN_EMAIL") or "").strip().lower()
         self.SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD") or ""
+        # Multimedia: carpeta donde se guardan fotos/videos. En Railway monta un Volume
+        # (p. ej. en /data) y define MEDIA_DIR=/data/media para que no se pierdan al redeploy.
+        self.MEDIA_DIR = os.getenv("MEDIA_DIR", "media_storage")
+        self.MAX_IMAGE_MB = int(os.getenv("MAX_IMAGE_MB", "15"))
+        self.MAX_VIDEO_MB = int(os.getenv("MAX_VIDEO_MB", "60"))
 
 
 settings = Settings()

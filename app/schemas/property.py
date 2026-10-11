@@ -1,15 +1,19 @@
+from datetime import datetime
 from typing import List, Optional
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.base import Money
+from app.models.base import Money as _Money  # noqa: F401  (misma anotación Decimal128)
 from app.models.enums import (
     Lifecycle,
+    MediaKind,
     OperationType,
     PropertyKind,
     PropertyType,
     PublishStatus,
+    UnitAvailability,
 )
 from app.models.property import (
     SEO,
@@ -114,6 +118,62 @@ class PropertyListItem(APIModel):
     single: Optional[SingleDetails] = None
     project: Optional[ProjectDetails] = None
     cover_media_id: Optional[PydanticObjectId] = None
+    # URLs relativas (/files/...) resueltas por el servidor para no obligar a un N+1 en el cliente
+    cover_url: Optional[str] = None
+    cover_thumb_url: Optional[str] = None
+
+
+class PublicMediaOut(APIModel):
+    """Foto o video visible en el catálogo público."""
+
+    id: PydanticObjectId
+    kind: MediaKind
+    url: str
+    thumb_url: Optional[str] = None
+    mime: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    duration_sec: Optional[float] = None
+
+
+class PublicPropertyOut(APIModel):
+    """Detalle público: no expone tenant_id, agent_id ni datos internos."""
+
+    id: PydanticObjectId
+    kind: PropertyKind
+    title: str
+    slug: str
+    description: Optional[str] = None
+    operation: OperationType
+    type: PropertyType
+    lifecycle: Lifecycle
+    location: Location
+    single: Optional[SingleDetails] = None
+    project: Optional[ProjectDetails] = None
+    features: List[str] = Field(default_factory=list)
+    seo: SEO
+    cover_url: Optional[str] = None
+    cover_thumb_url: Optional[str] = None
+    media: List[PublicMediaOut] = Field(default_factory=list)
+    updated_at: Optional[datetime] = None
+
+
+class PublicUnitOut(APIModel):
+    """Unidad de un proyecto publicado (solo lo que ve el cliente)."""
+
+    id: PydanticObjectId
+    code: str
+    label: Optional[str] = None
+    tower: Optional[str] = None
+    floor: Optional[int] = None
+    price: _Money
+    currency: str = "USD"
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[float] = None
+    area_m2: Optional[float] = None
+    parking: Optional[int] = None
+    lifecycle: Lifecycle
+    availability: UnitAvailability
 
 
 class PropertyFilter(BaseModel):

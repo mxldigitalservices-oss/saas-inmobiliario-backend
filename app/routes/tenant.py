@@ -11,9 +11,10 @@ from app.core.deps import (
     ADMIN_ROLES,
     get_current_tenant,
     require_roles,
-    resolve_tenant,
+    resolve_public_tenant,
 )
 from app.core.licensing import redeem_license
+from app.models.media import Media
 from app.models.tenant import DomainEntry, Tenant
 from app.models.user import User
 from app.schemas.license import LicenseRedeemOut, LicenseRedeemRequest
@@ -64,9 +65,15 @@ def _find_domain(tenant: Tenant, host: str) -> DomainEntry:
 
 
 @router.get("/public", response_model=TenantPublicOut)
-async def public_tenant(tenant: Tenant = Depends(resolve_tenant)):
-    """Datos públicos de la agencia según el Host header (sitio de marca blanca)."""
-    return tenant
+async def public_tenant(tenant: Tenant = Depends(resolve_public_tenant)):
+    """Datos públicos de la agencia (sitio de marca blanca): por Host o por ?agency=<slug>."""
+    out = TenantPublicOut.model_validate(tenant)
+    logo_id = tenant.branding.logo_media_id
+    if logo_id is not None:
+        logo = await Media.find_one({"_id": logo_id, "tenant_id": tenant.id})
+        if logo is not None:
+            out.logo_url = logo.storage.thumb_url or logo.storage.url
+    return out
 
 
 @router.get("/me", response_model=TenantOut)

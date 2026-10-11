@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Superadmin · SaaS Inmobiliario</title>
+  <script src="/static/session.js" data-guard="superadmin"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800">
 
   <header class="border-b border-slate-200 bg-white">
-    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
       <div>
         <h1 class="text-lg font-semibold text-slate-900">Panel de Superadministrador</h1>
         <p class="text-xs text-slate-500">Agencias y licencias · SaaS Inmobiliario</p>
@@ -20,7 +21,7 @@
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl px-4 py-6">
+  <main class="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-6">
 
     <!-- Pestañas -->
     <div class="mb-6 flex gap-2 border-b border-slate-200">
@@ -32,7 +33,7 @@
     <section id="tab-tenants">
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <input id="t-q" type="search" placeholder="Buscar por nombre o slug…"
-          class="w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 sm:w-64">
         <select id="t-status" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="">Todos los estados</option>
           <option value="trial">Prueba</option>
@@ -50,11 +51,11 @@
           <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th class="px-4 py-3">Agencia</th>
-              <th class="px-4 py-3">Slug</th>
+              <th class="hidden px-4 py-3 md:table-cell">Slug</th>
               <th class="px-4 py-3">Plan</th>
               <th class="px-4 py-3">Estado</th>
-              <th class="px-4 py-3">Vence</th>
-              <th class="px-4 py-3">Creada</th>
+              <th class="hidden px-4 py-3 sm:table-cell">Vence</th>
+              <th class="hidden px-4 py-3 lg:table-cell">Creada</th>
               <th class="px-4 py-3"></th>
             </tr>
           </thead>
@@ -93,11 +94,11 @@
             <tr>
               <th class="px-4 py-3">Prefijo</th>
               <th class="px-4 py-3">Plan</th>
-              <th class="px-4 py-3">Días</th>
+              <th class="hidden px-4 py-3 md:table-cell">Días</th>
               <th class="px-4 py-3">Estado</th>
-              <th class="px-4 py-3">Canjeada</th>
-              <th class="px-4 py-3">Creada</th>
-              <th class="px-4 py-3">Notas</th>
+              <th class="hidden px-4 py-3 lg:table-cell">Canjeada</th>
+              <th class="hidden px-4 py-3 lg:table-cell">Creada</th>
+              <th class="hidden px-4 py-3 lg:table-cell">Notas</th>
               <th class="px-4 py-3"></th>
             </tr>
           </thead>
@@ -115,8 +116,8 @@
   </main>
 
   <!-- Modal genérico -->
-  <div id="modal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-900/50 p-4">
-    <div id="modal-box" class="mt-10 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl"></div>
+  <div id="modal" class="fixed inset-0 z-40 hidden items-start justify-center overflow-y-auto bg-slate-900/50 p-2 sm:p-4">
+    <div id="modal-box" class="mt-2 w-full max-w-2xl rounded-2xl bg-white p-4 shadow-xl sm:mt-10 sm:p-6"></div>
   </div>
 
   <!-- Toast -->
@@ -129,21 +130,11 @@
 
     const $ = (id) => document.getElementById(id);
     const getToken = () => localStorage.getItem('access_token');
-
-    const logout = () => {
-      ['access_token', 'refresh_token', 'auth_audience'].forEach((k) => localStorage.removeItem(k));
-      window.location.replace(LOGIN_URL);
-    };
+    const logout = () => Session.logout();
 
     // ---------- Protección de ruta ----------
-    let allowed = true;
-    if (!getToken()) {
-      allowed = false;
-      window.location.replace(LOGIN_URL);
-    } else if (localStorage.getItem('auth_audience') !== 'superadmin') {
-      allowed = false;
-      window.location.replace(DASHBOARD_URL);
-    }
+    // La guardia del <head> ya redirige (login si no hay sesión válida; dashboard si es agente).
+    const allowed = Session.valid() && Session.audience() === 'superadmin';
 
     // ---------- Utilidades ----------
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
@@ -264,11 +255,11 @@
             const id = t.id ?? t._id;
             return `<tr class="border-t border-slate-100">
               <td class="px-4 py-3 font-medium text-slate-900">${esc(t.name)}</td>
-              <td class="px-4 py-3 text-slate-500">${esc(t.slug)}</td>
+              <td class="hidden px-4 py-3 text-slate-500 md:table-cell">${esc(t.slug)}</td>
               <td class="px-4 py-3">${esc(label(t.subscription?.plan))}</td>
               <td class="px-4 py-3">${badge(t.subscription?.status)}</td>
-              <td class="px-4 py-3">${fmtDate(t.subscription?.expires_at)}</td>
-              <td class="px-4 py-3">${fmtDate(t.created_at)}</td>
+              <td class="hidden px-4 py-3 sm:table-cell">${fmtDate(t.subscription?.expires_at)}</td>
+              <td class="hidden px-4 py-3 lg:table-cell">${fmtDate(t.created_at)}</td>
               <td class="px-4 py-3 text-right">
                 <button data-act="manage" data-id="${esc(id)}" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50">Gestionar</button>
               </td>
@@ -500,11 +491,11 @@
             return `<tr class="border-t border-slate-100">
               <td class="px-4 py-3 font-mono text-xs">${esc(l.token_prefix)}…</td>
               <td class="px-4 py-3">${esc(label(l.plan))}</td>
-              <td class="px-4 py-3">${esc(l.duration_days)}</td>
+              <td class="hidden px-4 py-3 md:table-cell">${esc(l.duration_days)}</td>
               <td class="px-4 py-3">${badge(l.status)}</td>
-              <td class="px-4 py-3">${fmtDate(l.redeemed_at)}</td>
-              <td class="px-4 py-3">${fmtDate(l.created_at)}</td>
-              <td class="max-w-[14rem] truncate px-4 py-3 text-slate-500" title="${esc(l.notes || '')}">${esc(l.notes || l.payment_ref || '—')}</td>
+              <td class="hidden px-4 py-3 lg:table-cell">${fmtDate(l.redeemed_at)}</td>
+              <td class="hidden px-4 py-3 lg:table-cell">${fmtDate(l.created_at)}</td>
+              <td class="hidden max-w-[14rem] truncate px-4 py-3 text-slate-500 lg:table-cell" title="${esc(l.notes || '')}">${esc(l.notes || l.payment_ref || '—')}</td>
               <td class="px-4 py-3 text-right">
                 ${l.status === 'unused'
                   ? `<button data-act="revoke" data-id="${esc(id)}" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50">Revocar</button>`

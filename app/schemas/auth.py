@@ -11,6 +11,8 @@ from app.schemas.common import APIModel, normalize_email, validate_password_stre
 class LoginRequest(BaseModel):
     email: str
     password: str = Field(min_length=1, max_length=128)
+    # Solo hace falta si el mismo correo y contraseña existen en varias agencias
+    agency: Optional[str] = Field(None, max_length=63)
 
     @field_validator("email")
     @classmethod

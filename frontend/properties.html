@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/static/session.js" data-guard="tenant"></script>
   <title>Propiedades</title>
 
   <!-- Guardia de ruta: se ejecuta antes de renderizar nada -->
@@ -29,6 +30,26 @@
     .skeleton { animation: pulseSoft 1.4s ease-in-out infinite; background: #e2e8f0; border-radius: .5rem; }
     @keyframes modalIn { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .modal-in { animation: modalIn .25s ease-out both; }
+  
+    /* ---- formulario de propiedad ---- */
+    :where(.fld) { display:block; width:100%; border:0; border-radius:.75rem; background:#f8fafc; padding:.85rem 1rem; font-size:1rem; line-height:1.4; color:#0f172a; outline:none; box-shadow:inset 0 0 0 1px #f1f5f9; transition:box-shadow .15s, background-color .15s; }
+    .fld::placeholder { color:#94a3b8; }
+    .fld:focus { background:#fff; box-shadow:0 0 0 2px #6366f1; }
+    @media (min-width:640px) { .fld { font-size:.875rem; padding:.8rem 1rem; } }
+    .act { display:inline-flex; align-items:center; justify-content:center; min-height:2.5rem; padding:.45rem .85rem; border-radius:.75rem; background:#f8fafc; color:#475569; font-size:.75rem; font-weight:600; transition:background-color .15s, color .15s; }
+    .act:hover { background:#f1f5f9; color:#0f172a; }
+    .act:disabled { opacity:.6; cursor:wait; }
+    .act-primary { background:#eef2ff; color:#4f46e5; }
+    .act-primary:hover { background:#e0e7ff; color:#4338ca; }
+    .chips { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .chips:empty { display:none; }
+    .chip { display:inline-flex; align-items:center; gap:.25rem; border-radius:9999px; background:#eef2ff; color:#4f46e5; padding:.3rem .5rem .3rem .8rem; font-size:.75rem; font-weight:600; }
+    .chip button { display:inline-flex; align-items:center; justify-content:center; width:1.5rem; height:1.5rem; border-radius:9999px; opacity:.7; }
+    .chip button:hover { opacity:1; background:rgba(79,70,229,.12); }
+    .kind-on { background:#eef2ff; color:#4338ca; box-shadow:0 0 0 2px #6366f1; }
+    .kind-off { background:#fff; color:#475569; box-shadow:0 0 0 1px #e2e8f0; }
+    .kind-off:hover { background:#f8fafc; }
+    @media (prefers-reduced-motion:reduce) { .fade-up,.modal-in { animation:none !important; } }
   </style>
 </head>
 <body class="h-full bg-slate-50 antialiased text-slate-900">
@@ -117,38 +138,42 @@
       </header>
 
       <!-- Main -->
-      <main class="flex-1 px-5 py-8 sm:px-8 sm:py-10">
+      <main class="flex-1 px-4 py-6 sm:px-8 sm:py-10">
         <div class="mx-auto max-w-6xl">
 
           <!-- Encabezado -->
-          <div class="fade-up flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 class="text-3xl font-bold tracking-tight text-slate-900">Propiedades</h1>
+          <div class="fade-up flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div class="min-w-0">
+              <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Propiedades</h1>
               <p id="subtitle" class="mt-2 text-slate-500">Administra tu cartera de inmuebles.</p>
             </div>
-            <button id="new-btn" class="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <button id="new-btn" class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
               Registrar Propiedad
             </button>
           </div>
 
           <!-- Búsqueda -->
-          <div class="fade-up mt-8" style="animation-delay:.06s">
-            <div class="relative max-w-md">
+          <div class="fade-up mt-6 sm:mt-8" style="animation-delay:.06s">
+            <div class="relative w-full max-w-md">
               <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
               <input id="search" type="search" placeholder="Buscar por título..." autocomplete="off"
-                class="block w-full rounded-xl border-0 bg-white py-3.5 pl-12 pr-4 text-sm text-slate-900 placeholder-slate-400 outline-none ring-1 ring-slate-100 transition focus:ring-2 focus:ring-indigo-500">
+                class="block w-full rounded-xl border-0 bg-white py-3.5 pl-12 pr-4 text-base text-slate-900 placeholder-slate-400 outline-none ring-1 ring-slate-100 transition focus:ring-2 focus:ring-indigo-500 sm:text-sm">
             </div>
           </div>
 
           <!-- Error -->
-          <div id="error-box" class="mt-8 hidden items-center justify-between gap-4 rounded-xl bg-rose-50 px-5 py-4 text-sm text-rose-700">
+          <div id="error-box" class="mt-6 hidden flex-col gap-3 rounded-xl bg-rose-50 px-5 py-4 text-sm text-rose-700 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
             <span id="error-text"></span>
-            <button id="retry-btn" class="flex-none rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm transition hover:shadow-md">Reintentar</button>
+            <button id="retry-btn" class="flex-none self-start rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm transition hover:shadow-md">Reintentar</button>
           </div>
 
           <!-- Grid -->
-          <section id="grid" class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3"></section>
+          <section id="grid" class="mt-6 grid gap-5 sm:mt-8 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"></section>
+
+          <div id="more-wrap" class="mt-8 hidden justify-center">
+            <button id="more-btn" class="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md">Cargar más propiedades</button>
+          </div>
 
           <!-- Estado vacío -->
           <div id="empty" class="mt-8 hidden rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-sm">
@@ -164,38 +189,241 @@
     </div>
   </div>
 
-  <!-- Modal vacío -->
-  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
-    <div class="modal-in w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-8 shadow-lg">
-      <div class="flex items-start justify-between">
-        <div>
-          <h2 class="text-xl font-bold tracking-tight text-slate-900">Registrar propiedad</h2>
-          <p class="mt-1.5 text-sm text-slate-500">El formulario de registro estará disponible próximamente.</p>
+  <!-- Formulario crear / editar -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/50 backdrop-blur-sm sm:items-center sm:p-4" aria-hidden="true">
+    <div class="modal-in flex max-h-[96vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[92vh] sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="form-title">
+
+      <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-8 sm:py-5">
+        <div class="min-w-0">
+          <h2 id="form-title" class="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">Registrar propiedad</h2>
+          <p id="form-sub" class="mt-0.5 text-xs text-slate-500 sm:text-sm">Completa los datos y agrega fotos y videos.</p>
         </div>
-        <button id="modal-close" aria-label="Cerrar" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
+        <button id="modal-close" type="button" aria-label="Cerrar" class="flex h-10 w-10 flex-none items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="mt-8 flex justify-end">
-        <button id="modal-ok" class="rounded-xl bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Cerrar</button>
-      </div>
+
+      <form id="prop-form" class="flex min-h-0 flex-1 flex-col" novalidate>
+        <div id="form-body" class="flex-1 space-y-8 overflow-y-auto px-5 py-6 sm:px-8">
+
+          <div id="form-loading" class="hidden space-y-4">
+            <div class="skeleton h-12 w-full !rounded-xl"></div>
+            <div class="skeleton h-24 w-full !rounded-xl"></div>
+            <div class="skeleton h-12 w-full !rounded-xl"></div>
+          </div>
+
+          <div id="form-fields" class="space-y-8">
+
+            <!-- Tipo -->
+            <section>
+              <h3 class="text-sm font-semibold text-slate-900">Tipo de registro</h3>
+              <div id="kind-group" class="mt-3 grid grid-cols-2 gap-3">
+                <button type="button" data-kind="single" class="kind-btn rounded-xl p-4 text-left transition">
+                  <span class="block text-sm font-semibold">Propiedad individual</span>
+                  <span class="mt-0.5 block text-xs opacity-80">Casa, apartamento, solar…</span>
+                </button>
+                <button type="button" data-kind="project" class="kind-btn rounded-xl p-4 text-left transition">
+                  <span class="block text-sm font-semibold">Proyecto</span>
+                  <span class="mt-0.5 block text-xs opacity-80">Torre o residencial con unidades</span>
+                </button>
+              </div>
+              <p id="kind-note" class="mt-2 hidden text-xs text-slate-400">El tipo de registro no se puede cambiar una vez creado.</p>
+            </section>
+
+            <!-- Información -->
+            <section class="space-y-4">
+              <h3 class="text-sm font-semibold text-slate-900">Información básica</h3>
+              <div>
+                <label for="f-title" class="mb-2 block text-sm font-medium text-slate-700">Título <span class="text-rose-500">*</span></label>
+                <input id="f-title" type="text" maxlength="160" placeholder="Ej. Apartamento moderno en Piantini" class="fld">
+              </div>
+              <div>
+                <label for="f-description" class="mb-2 block text-sm font-medium text-slate-700">Descripción</label>
+                <textarea id="f-description" rows="5" maxlength="10000" placeholder="Describe la propiedad: distribución, acabados, cercanías…" class="fld resize-y"></textarea>
+              </div>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="f-operation" class="mb-2 block text-sm font-medium text-slate-700">Operación</label>
+                  <select id="f-operation" class="fld">
+                    <option value="sale">Venta</option>
+                    <option value="rent">Alquiler</option>
+                    <option value="both">Venta y alquiler</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="f-type" class="mb-2 block text-sm font-medium text-slate-700">Tipo de inmueble</label>
+                  <select id="f-type" class="fld">
+                    <option value="apartment">Apartamento</option>
+                    <option value="house">Casa</option>
+                    <option value="villa">Villa</option>
+                    <option value="land">Terreno</option>
+                    <option value="commercial">Local comercial</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="f-lifecycle" class="mb-2 block text-sm font-medium text-slate-700">Etapa</label>
+                  <select id="f-lifecycle" class="fld">
+                    <option value="listo">Listo para entrega</option>
+                    <option value="construccion">En construcción</option>
+                    <option value="en_plano">En planos</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="f-status" class="mb-2 block text-sm font-medium text-slate-700">Visibilidad</label>
+                  <select id="f-status" class="fld">
+                    <option value="draft">Borrador (solo tú la ves)</option>
+                    <option value="published">Publicada en el catálogo</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <!-- Ubicación -->
+            <section class="space-y-4">
+              <h3 class="text-sm font-semibold text-slate-900">Ubicación</h3>
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label for="f-province" class="mb-2 block text-sm font-medium text-slate-700">Provincia</label>
+                  <input id="f-province" type="text" maxlength="80" placeholder="Distrito Nacional" class="fld">
+                </div>
+                <div>
+                  <label for="f-city" class="mb-2 block text-sm font-medium text-slate-700">Ciudad</label>
+                  <input id="f-city" type="text" maxlength="80" placeholder="Santo Domingo" class="fld">
+                </div>
+                <div>
+                  <label for="f-sector" class="mb-2 block text-sm font-medium text-slate-700">Sector</label>
+                  <input id="f-sector" type="text" maxlength="80" placeholder="Piantini" class="fld">
+                </div>
+              </div>
+              <div>
+                <label for="f-address" class="mb-2 block text-sm font-medium text-slate-700">Dirección</label>
+                <input id="f-address" type="text" maxlength="200" placeholder="Calle, número, referencia" class="fld">
+              </div>
+            </section>
+
+            <!-- Detalles individual -->
+            <section id="sec-single" class="space-y-4">
+              <h3 class="text-sm font-semibold text-slate-900">Detalles y precio</h3>
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="sm:col-span-2">
+                  <label for="f-price" class="mb-2 block text-sm font-medium text-slate-700">Precio</label>
+                  <input id="f-price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" class="fld">
+                </div>
+                <div>
+                  <label for="f-currency" class="mb-2 block text-sm font-medium text-slate-700">Moneda</label>
+                  <select id="f-currency" class="fld">
+                    <option value="USD">USD (US$)</option>
+                    <option value="DOP">DOP (RD$)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <label for="f-bedrooms" class="mb-2 block text-sm font-medium text-slate-700">Habitaciones</label>
+                  <input id="f-bedrooms" type="number" inputmode="numeric" min="0" step="1" class="fld">
+                </div>
+                <div>
+                  <label for="f-bathrooms" class="mb-2 block text-sm font-medium text-slate-700">Baños</label>
+                  <input id="f-bathrooms" type="number" inputmode="decimal" min="0" step="0.5" class="fld">
+                </div>
+                <div>
+                  <label for="f-area" class="mb-2 block text-sm font-medium text-slate-700">Área (m²)</label>
+                  <input id="f-area" type="number" inputmode="decimal" min="0" step="0.01" class="fld">
+                </div>
+                <div>
+                  <label for="f-parking" class="mb-2 block text-sm font-medium text-slate-700">Parqueos</label>
+                  <input id="f-parking" type="number" inputmode="numeric" min="0" step="1" class="fld">
+                </div>
+              </div>
+              <div class="sm:w-1/2">
+                <label for="f-availability" class="mb-2 block text-sm font-medium text-slate-700">Disponibilidad</label>
+                <select id="f-availability" class="fld">
+                  <option value="available">Disponible</option>
+                  <option value="reserved">Reservada</option>
+                  <option value="sold">Vendida</option>
+                  <option value="rented">Alquilada</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- Detalles proyecto -->
+            <section id="sec-project" class="hidden space-y-4">
+              <h3 class="text-sm font-semibold text-slate-900">Datos del proyecto</h3>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="f-developer" class="mb-2 block text-sm font-medium text-slate-700">Desarrollador</label>
+                  <input id="f-developer" type="text" maxlength="120" class="fld">
+                </div>
+                <div>
+                  <label for="f-delivery" class="mb-2 block text-sm font-medium text-slate-700">Fecha de entrega</label>
+                  <input id="f-delivery" type="date" class="fld">
+                </div>
+                <div>
+                  <label for="f-total-units" class="mb-2 block text-sm font-medium text-slate-700">Total de unidades</label>
+                  <input id="f-total-units" type="number" inputmode="numeric" min="0" step="1" class="fld">
+                </div>
+                <div>
+                  <label for="f-floors" class="mb-2 block text-sm font-medium text-slate-700">Pisos</label>
+                  <input id="f-floors" type="number" inputmode="numeric" min="0" step="1" class="fld">
+                </div>
+              </div>
+              <div>
+                <label for="f-amenities-input" class="mb-2 block text-sm font-medium text-slate-700">Amenidades</label>
+                <div id="amenities-chips" class="chips"></div>
+                <input id="f-amenities-input" type="text" maxlength="60" placeholder="Piscina, gimnasio… (Enter o coma para agregar)" class="fld mt-2">
+              </div>
+              <p class="rounded-xl bg-indigo-50 px-4 py-3 text-xs text-indigo-700">Las unidades (precio, habitaciones, disponibilidad) se gestionan desde la sección Unidades.</p>
+            </section>
+
+            <!-- Características -->
+            <section class="space-y-3">
+              <h3 class="text-sm font-semibold text-slate-900">Características</h3>
+              <div id="features-chips" class="chips"></div>
+              <input id="f-features-input" type="text" maxlength="60" placeholder="Aire acondicionado, planta eléctrica… (Enter o coma para agregar)" class="fld">
+            </section>
+
+            <!-- Multimedia -->
+            <section>
+              <h3 class="text-sm font-semibold text-slate-900">Fotos y videos</h3>
+              <p class="mt-1 text-xs text-slate-500">Se muestran de inmediato en tu catálogo público cuando la propiedad está publicada. La portada es la foto principal de la tarjeta.</p>
+              <div id="media-slot" class="mt-4"></div>
+            </section>
+
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 bg-white px-5 py-4 sm:px-8" style="padding-bottom:max(1rem, env(safe-area-inset-bottom))">
+          <p id="form-error" class="mb-3 hidden rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert"></p>
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button id="archive-btn" type="button" class="hidden rounded-xl px-4 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50 sm:py-2.5">Archivar propiedad</button>
+            <div class="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row">
+              <button id="cancel-btn" type="button" class="rounded-xl bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Cancelar</button>
+              <button id="save-btn" type="submit" class="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70">
+                <svg id="save-spinner" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                <span id="save-text">Guardar propiedad</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 
+  <!-- Aviso -->
+  <div id="toast" class="pointer-events-none fixed inset-x-4 bottom-4 z-[80] hidden justify-center sm:inset-x-auto sm:right-6 sm:justify-end" style="bottom:max(1rem, env(safe-area-inset-bottom))">
+    <div id="toast-box" class="pointer-events-auto max-w-sm rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg"></div>
+  </div>
+
+  <script src="/static/media-uploader.js"></script>
   <script type="module">
-    const LOGIN_URL = 'index.html';
     const API = '/api/v1';
+    const PAGE_SIZE = 24;
 
     // ---------- Sesión ----------
     const getToken = () => localStorage.getItem('access_token');
-
-    const logout = () => {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      window.location.replace(LOGIN_URL);
-    };
-
-    if (!getToken()) logout();
+    const logout = () => Session.logout();
+    if (!Session.valid()) logout();
 
     const $ = (id) => document.getElementById(id);
     $('logout-btn').addEventListener('click', logout);
@@ -211,148 +439,183 @@
     overlay.addEventListener('click', () => toggleMenu(false));
 
     // ---------- Datos del agente (desde el JWT) ----------
-    const decodeJwt = (token) => {
-      try {
-        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        const json = decodeURIComponent(
-          atob(payload).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-        );
-        return JSON.parse(json);
-      } catch { return null; }
-    };
-
-    const claims = decodeJwt(getToken()) || {};
+    const claims = Session.claims() || {};
     const email = claims.email || (typeof claims.sub === 'string' && claims.sub.includes('@') ? claims.sub : '');
     const fullName = claims.full_name || claims.name || (email ? email.split('@')[0] : 'Agente');
     const displayName = fullName.charAt(0).toUpperCase() + fullName.slice(1);
-
     $('agent-name').textContent = displayName;
     $('agent-email').textContent = email || 'Sesión activa';
     $('avatar').textContent = displayName.charAt(0).toUpperCase();
 
-    // ---------- Modal ----------
-    const modal = $('modal');
-    const openModal = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); };
-    const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
-    $('new-btn').addEventListener('click', openModal);
-    $('modal-close').addEventListener('click', closeModal);
-    $('modal-ok').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-    // ---------- API ----------
-    const toList = (data) => {
-      if (Array.isArray(data)) return data;
-      if (Array.isArray(data?.items)) return data.items;
-      if (Array.isArray(data?.data)) return data.data;
-      if (Array.isArray(data?.results)) return data.results;
-      return [];
-    };
-
-    const apiGet = async (path) => {
-      const res = await fetch(`${API}${path}`, {
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Accept': 'application/json' }
-      });
-      if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
-      if (!res.ok) throw new Error(`El servidor respondió con error ${res.status}.`);
-      return toList(await res.json());
-    };
-
     // ---------- Utilidades ----------
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const norm = (v) => String(v ?? '').trim().toLowerCase();
+    const safeFile = (u) => (/^\/files\/[A-Za-z0-9_\-./]+$/.test(String(u || '')) ? u : '');
+    const numOrNull = (v) => { const s = String(v ?? '').trim(); if (s === '') return null; const n = Number(s); return Number.isFinite(n) ? n : null; };
+    const intOrNull = (v) => { const n = numOrNull(v); return n === null ? null : Math.trunc(n); };
 
-    const getTitle = (p) => p.title ?? p.name ?? p.titulo ?? p.nombre ?? 'Propiedad sin título';
-    const getLocation = (p) => {
-      const loc = p.address ?? p.location ?? p.direccion ?? p.city ?? p.ciudad ?? p.sector ?? '';
-      return typeof loc === 'object' && loc !== null ? Object.values(loc).filter(Boolean).join(', ') : loc;
+    const money = (amount, currency) => {
+      const n = Number(amount);
+      if (amount === null || amount === undefined || amount === '' || !Number.isFinite(n)) return null;
+      try {
+        return new Intl.NumberFormat('es-DO', { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(n);
+      } catch { return `${currency || ''} ${n.toLocaleString('es-DO')}`.trim(); }
     };
 
+    const errMsg = (data, fallback) => {
+      if (!data) return fallback;
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail) && data.detail[0]) {
+        const d = data.detail[0];
+        const field = Array.isArray(d.loc) ? d.loc.filter((x) => x !== 'body').join(' › ') : '';
+        return field ? `${field}: ${d.msg}` : (d.msg || fallback);
+      }
+      if (data.detail && data.detail.message) return data.detail.message;
+      return fallback;
+    };
+
+    let toastTimer;
+    const toast = (message, kind = 'ok') => {
+      const box = $('toast-box');
+      box.textContent = message;
+      box.className = 'pointer-events-auto max-w-sm rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ' +
+        (kind === 'error' ? 'bg-rose-600' : kind === 'warn' ? 'bg-amber-600' : 'bg-slate-900');
+      $('toast').classList.remove('hidden');
+      $('toast').classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { $('toast').classList.add('hidden'); $('toast').classList.remove('flex'); }, 4500);
+    };
+
+    const api = async (method, path, body) => {
+      const res = await fetch(`${API}${path}`, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Accept': 'application/json',
+          ...(body !== undefined ? { 'Content-Type': 'application/json' } : {})
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined
+      });
+      if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
+      if (res.status === 204) return null;
+      let data = null;
+      try { data = await res.json(); } catch (_) { /* sin JSON */ }
+      if (!res.ok) throw new Error(errMsg(data, `El servidor respondió con error ${res.status}.`));
+      return data;
+    };
+
+    // ---------- Catálogos ----------
     const OPERATIONS = {
-      sale:      { label: 'Venta',    cls: 'bg-indigo-50 text-indigo-600' },
-      venta:     { label: 'Venta',    cls: 'bg-indigo-50 text-indigo-600' },
-      sell:      { label: 'Venta',    cls: 'bg-indigo-50 text-indigo-600' },
-      rent:      { label: 'Alquiler', cls: 'bg-violet-50 text-violet-600' },
-      rental:    { label: 'Alquiler', cls: 'bg-violet-50 text-violet-600' },
-      alquiler:  { label: 'Alquiler', cls: 'bg-violet-50 text-violet-600' }
+      sale: { label: 'Venta', cls: 'bg-indigo-50 text-indigo-600' },
+      rent: { label: 'Alquiler', cls: 'bg-violet-50 text-violet-600' },
+      both: { label: 'Venta y alquiler', cls: 'bg-sky-50 text-sky-600' }
     };
-    const getOperation = (p) => {
-      const raw = norm(p.operation_type ?? p.listing_type ?? p.transaction_type ?? p.operation ?? p.operacion ?? p.type ?? p.tipo);
-      return OPERATIONS[raw] ?? { label: raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Sin definir', cls: 'bg-slate-100 text-slate-500' };
-    };
-
     const STATUSES = {
-      active:      { label: 'Activa',      cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      activa:      { label: 'Activa',      cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      available:   { label: 'Disponible',  cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      disponible:  { label: 'Disponible',  cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      published:   { label: 'Publicada',   cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      publicada:   { label: 'Publicada',   cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
-      reserved:    { label: 'Reservada',   cls: 'bg-amber-50 text-amber-600',     dot: 'bg-amber-500' },
-      reservada:   { label: 'Reservada',   cls: 'bg-amber-50 text-amber-600',     dot: 'bg-amber-500' },
-      pending:     { label: 'Pendiente',   cls: 'bg-amber-50 text-amber-600',     dot: 'bg-amber-500' },
-      pendiente:   { label: 'Pendiente',   cls: 'bg-amber-50 text-amber-600',     dot: 'bg-amber-500' },
-      sold:        { label: 'Vendida',     cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
-      vendida:     { label: 'Vendida',     cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
-      rented:      { label: 'Alquilada',   cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
-      alquilada:   { label: 'Alquilada',   cls: 'bg-rose-50 text-rose-600',       dot: 'bg-rose-500' },
-      draft:       { label: 'Borrador',    cls: 'bg-slate-100 text-slate-500',    dot: 'bg-slate-400' },
-      borrador:    { label: 'Borrador',    cls: 'bg-slate-100 text-slate-500',    dot: 'bg-slate-400' },
-      inactive:    { label: 'Inactiva',    cls: 'bg-slate-100 text-slate-500',    dot: 'bg-slate-400' },
-      inactiva:    { label: 'Inactiva',    cls: 'bg-slate-100 text-slate-500',    dot: 'bg-slate-400' }
+      published: { label: 'Publicada', cls: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500' },
+      draft: { label: 'Borrador', cls: 'bg-slate-100 text-slate-500', dot: 'bg-slate-400' },
+      archived: { label: 'Archivada', cls: 'bg-rose-50 text-rose-600', dot: 'bg-rose-500' }
     };
-    const getStatus = (p) => {
-      let raw = norm(p.status ?? p.estado);
-      if (!raw && typeof p.is_active === 'boolean') raw = p.is_active ? 'active' : 'inactive';
-      return STATUSES[raw] ?? { label: raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Sin estado', cls: 'bg-slate-100 text-slate-500', dot: 'bg-slate-400' };
-    };
+    const op = (p) => OPERATIONS[norm(p.operation)] ?? { label: p.operation || 'Sin definir', cls: 'bg-slate-100 text-slate-500' };
+    const st = (p) => STATUSES[norm(p.status)] ?? { label: p.status || 'Sin estado', cls: 'bg-slate-100 text-slate-500', dot: 'bg-slate-400' };
 
-    // ---------- Render ----------
+    // ---------- Agencia (para el enlace al catálogo público) ----------
+    let agencySlug = null;
+    api('GET', '/tenants/me').then((t) => { agencySlug = t?.slug || null; render(); }).catch(() => {});
+
+    // ---------- Listado ----------
     const grid = $('grid');
     const empty = $('empty');
     const errorBox = $('error-box');
     let properties = [];
+    let page = 1;
+    let pages = 1;
+    let total = 0;
+    let loading = false;
 
     const renderSkeletons = () => {
       empty.classList.add('hidden');
       grid.innerHTML = Array.from({ length: 6 }, () => `
-        <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div class="skeleton h-12 w-12 !rounded-xl"></div>
-          <div class="skeleton mt-5 h-5 w-3/4"></div>
-          <div class="skeleton mt-3 h-4 w-1/2"></div>
-          <div class="mt-6 flex gap-2"><div class="skeleton h-7 w-20 !rounded-full"></div><div class="skeleton h-7 w-24 !rounded-full"></div></div>
+        <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div class="skeleton aspect-[4/3] !rounded-none"></div>
+          <div class="p-5">
+            <div class="skeleton h-5 w-3/4"></div>
+            <div class="skeleton mt-3 h-4 w-1/2"></div>
+            <div class="mt-5 flex gap-2"><div class="skeleton h-7 w-20 !rounded-full"></div><div class="skeleton h-7 w-24 !rounded-full"></div></div>
+          </div>
         </div>`).join('');
     };
 
+    const priceLine = (p) => {
+      if (p.kind === 'project') {
+        const s = p.project?.units_summary;
+        const lo = money(s?.price_min, 'USD');
+        return lo ? `Desde ${lo}` : 'Proyecto';
+      }
+      return money(p.single?.price, p.single?.currency) || 'Precio por definir';
+    };
+
+    const specsLine = (p) => {
+      if (p.kind === 'project') {
+        const s = p.project?.units_summary;
+        return s ? `${s.available ?? 0} disponibles · ${s.reserved ?? 0} reservadas` : '';
+      }
+      const d = p.single || {};
+      return [
+        d.bedrooms != null ? `${d.bedrooms} hab` : '',
+        d.bathrooms != null ? `${d.bathrooms} baños` : '',
+        d.area_m2 != null ? `${d.area_m2} m²` : ''
+      ].filter(Boolean).join(' · ');
+    };
+
+    const locationLine = (p) => [p.location?.sector, p.location?.city].filter(Boolean).join(', ');
+
     const card = (p, i) => {
-      const op = getOperation(p);
-      const st = getStatus(p);
-      const loc = getLocation(p);
+      const o = op(p);
+      const s = st(p);
+      const thumb = safeFile(p.cover_thumb_url || p.cover_url);
+      const id = esc(p.id ?? p._id);
+      const published = norm(p.status) === 'published';
+      const publicLink = published && agencySlug
+        ? `<a href="/a/${encodeURIComponent(agencySlug)}/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener" class="act">Ver en catálogo ↗</a>` : '';
       return `
-        <article class="fade-up group rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:shadow-lg" style="animation-delay:${Math.min(i, 8) * 0.04}s">
-          <div class="flex items-start justify-between">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>
-            </div>
-            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${op.cls}">${esc(op.label)}</span>
-          </div>
-          <h3 class="mt-5 text-base font-semibold leading-snug text-slate-900">${esc(getTitle(p))}</h3>
-          <p class="mt-1.5 min-h-[1.25rem] text-sm text-slate-500">${esc(loc) || '&nbsp;'}</p>
-          <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${st.cls}">
-              <span class="h-1.5 w-1.5 rounded-full ${st.dot}"></span>${esc(st.label)}
+        <article class="fade-up group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:shadow-lg" style="animation-delay:${Math.min(i, 8) * 0.04}s">
+          <div class="relative aspect-[4/3] bg-slate-100">
+            ${thumb
+              ? `<img src="${esc(thumb)}" alt="" loading="lazy" class="h-full w-full object-cover">`
+              : `<div class="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-300">
+                   <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A1.5 1.5 0 0021.75 19.5v-15A1.5 1.5 0 0020.25 3H3.75A1.5 1.5 0 002.25 4.5v15A1.5 1.5 0 003.75 21z"/></svg>
+                   <span class="text-xs">Sin fotos todavía</span>
+                 </div>`}
+            <span class="absolute left-3 top-3 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${o.cls} bg-white/95 backdrop-blur">${esc(o.label)}</span>
+            <span class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm bg-white/95 backdrop-blur ${s.cls}">
+              <span class="h-1.5 w-1.5 rounded-full ${s.dot}"></span>${esc(s.label)}
             </span>
+          </div>
+          <div class="flex flex-1 flex-col p-5">
+            <h3 class="text-base font-semibold leading-snug text-slate-900">${esc(p.title ?? 'Propiedad sin título')}</h3>
+            <p class="mt-1 min-h-[1.25rem] truncate text-sm text-slate-500">${esc(locationLine(p)) || '&nbsp;'}</p>
+            <p class="mt-3 text-lg font-bold tracking-tight text-slate-900">${esc(priceLine(p))}</p>
+            <p class="mt-1 min-h-[1.25rem] text-xs text-slate-500">${esc(specsLine(p)) || '&nbsp;'}</p>
+            <div class="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+              <button type="button" data-edit="${id}" class="act act-primary">Editar</button>
+              <button type="button" data-media="${id}" data-title="${esc(p.title ?? '')}" class="act">Fotos y videos</button>
+              <button type="button" data-toggle="${id}" data-published="${published ? '1' : '0'}" class="act">${published ? 'Despublicar' : 'Publicar'}</button>
+              ${publicLink}
+            </div>
           </div>
         </article>`;
     };
 
     const render = () => {
       const q = norm($('search').value);
-      const list = q ? properties.filter((p) => norm(getTitle(p)).includes(q)) : properties;
+      const list = q ? properties.filter((p) => norm(p.title).includes(q)) : properties;
 
-      $('subtitle').textContent = properties.length
-        ? `${properties.length} ${properties.length === 1 ? 'propiedad registrada' : 'propiedades registradas'} en tu cartera.`
+      $('subtitle').textContent = total
+        ? `${total} ${total === 1 ? 'propiedad registrada' : 'propiedades registradas'} en tu cartera.`
         : 'Administra tu cartera de inmuebles.';
+
+      $('more-wrap').classList.toggle('hidden', !(page < pages));
+      $('more-wrap').classList.toggle('flex', page < pages);
 
       if (!list.length) {
         grid.innerHTML = '';
@@ -365,25 +628,399 @@
       grid.innerHTML = list.map(card).join('');
     };
 
-    const load = async () => {
+    const showError = (err) => {
+      $('error-text').textContent = err instanceof TypeError ? 'Error de conexión con el servidor.' : err.message;
+      errorBox.classList.remove('hidden');
+      errorBox.classList.add('flex');
+    };
+
+    const load = async ({ append = false, silent = false } = {}) => {
+      if (loading) return;
+      loading = true;
       errorBox.classList.add('hidden');
       errorBox.classList.remove('flex');
-      renderSkeletons();
+      if (!append && !silent) renderSkeletons();
       try {
-        properties = await apiGet('/properties');
+        const target = append ? page + 1 : 1;
+        const data = await api('GET', `/properties?page=${target}&page_size=${PAGE_SIZE}`);
+        const items = Array.isArray(data) ? data : (data?.items ?? []);
+        properties = append ? properties.concat(items) : items;
+        page = data?.page ?? target;
+        pages = data?.pages ?? 1;
+        total = data?.total ?? properties.length;
         render();
       } catch (err) {
-        grid.innerHTML = '';
-        $('error-text').textContent = err instanceof TypeError
-          ? 'Error de conexión con el servidor.'
-          : err.message;
-        errorBox.classList.remove('hidden');
-        errorBox.classList.add('flex');
+        if (!append) { grid.innerHTML = ''; }
+        showError(err);
+      } finally {
+        loading = false;
       }
     };
 
     $('search').addEventListener('input', render);
-    $('retry-btn').addEventListener('click', load);
+    $('retry-btn').addEventListener('click', () => load());
+    $('more-btn').addEventListener('click', () => load({ append: true }));
+
+    // Refresco silencioso (por ejemplo tras subir fotos desde el formulario)
+    let refreshTimer;
+    const refreshSoon = () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => load({ silent: true }), 600); };
+
+    // ---------- Acciones de tarjeta ----------
+    grid.addEventListener('click', async (e) => {
+      const edit = e.target.closest('[data-edit]');
+      const media = e.target.closest('[data-media]');
+      const tog = e.target.closest('[data-toggle]');
+      if (edit) {
+        openForm(edit.dataset.edit);
+      } else if (media) {
+        MediaUploader.open({
+          ownerType: 'property',
+          ownerId: media.dataset.media,
+          title: 'Fotos y videos · ' + media.dataset.title,
+          onChange: refreshSoon
+        });
+      } else if (tog) {
+        const publish = tog.dataset.published !== '1';
+        tog.disabled = true;
+        try {
+          await api('POST', `/properties/${encodeURIComponent(tog.dataset.toggle)}/${publish ? 'publish' : 'unpublish'}`);
+          toast(publish ? 'Propiedad publicada en tu catálogo' : 'Propiedad despublicada');
+          await load({ silent: true });
+        } catch (err) {
+          tog.disabled = false;
+          toast(err.message, 'error');
+        }
+      }
+    });
+
+    // ==================================================================================
+    // Formulario crear / editar
+    // ==================================================================================
+    const modal = $('modal');
+    const form = $('prop-form');
+    const state = { id: null, kind: 'single', original: null, panel: null, saving: false, features: [], amenities: [] };
+
+    // Chips (características / amenidades)
+    const chipInput = (listKey, chipsId, inputId) => {
+      const chips = $(chipsId);
+      const input = $(inputId);
+      const paint = () => {
+        chips.innerHTML = state[listKey].map((t, i) =>
+          `<span class="chip">${esc(t)}<button type="button" data-chip="${i}" aria-label="Quitar ${esc(t)}">✕</button></span>`).join('');
+      };
+      const add = (raw) => {
+        raw.split(',').map((s) => s.trim()).filter(Boolean).forEach((t) => {
+          if (!state[listKey].some((x) => norm(x) === norm(t)) && state[listKey].length < 40) state[listKey].push(t.slice(0, 60));
+        });
+        input.value = '';
+        paint();
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input.value); }
+        else if (e.key === 'Backspace' && !input.value && state[listKey].length) { state[listKey].pop(); paint(); }
+      });
+      input.addEventListener('blur', () => { if (input.value.trim()) add(input.value); });
+      input.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        if (text.includes(',')) { e.preventDefault(); add(text); }
+      });
+      chips.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-chip]');
+        if (!b) return;
+        state[listKey].splice(Number(b.dataset.chip), 1);
+        paint();
+      });
+      return paint;
+    };
+    const paintFeatures = chipInput('features', 'features-chips', 'f-features-input');
+    const paintAmenities = chipInput('amenities', 'amenities-chips', 'f-amenities-input');
+
+    const setKind = (kind) => {
+      state.kind = kind;
+      document.querySelectorAll('.kind-btn').forEach((b) => {
+        const on = b.dataset.kind === kind;
+        b.classList.toggle('kind-on', on);
+        b.classList.toggle('kind-off', !on);
+      });
+      $('sec-single').classList.toggle('hidden', kind !== 'single');
+      $('sec-project').classList.toggle('hidden', kind !== 'project');
+    };
+
+    $('kind-group').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-kind]');
+      if (!b || state.id) return; // el tipo no se cambia al editar
+      setKind(b.dataset.kind);
+    });
+
+    const setError = (msg) => {
+      const el = $('form-error');
+      el.textContent = msg || '';
+      el.classList.toggle('hidden', !msg);
+      if (msg) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    };
+
+    const setSaving = (on, label) => {
+      state.saving = on;
+      $('save-btn').disabled = on;
+      $('save-spinner').classList.toggle('hidden', !on);
+      $('save-text').textContent = on ? (label || 'Guardando…') : (state.id ? 'Guardar cambios' : 'Guardar propiedad');
+    };
+
+    const resetForm = () => {
+      form.reset();
+      state.features = [];
+      state.amenities = [];
+      paintFeatures();
+      paintAmenities();
+      setKind('single');
+      setError('');
+    };
+
+    const fillForm = (p) => {
+      $('f-title').value = p.title ?? '';
+      $('f-description').value = p.description ?? '';
+      $('f-operation').value = p.operation ?? 'sale';
+      $('f-type').value = p.type ?? 'apartment';
+      $('f-lifecycle').value = p.lifecycle ?? 'listo';
+      $('f-status').value = p.status === 'published' ? 'published' : 'draft';
+      $('f-province').value = p.location?.province ?? '';
+      $('f-city').value = p.location?.city ?? '';
+      $('f-sector').value = p.location?.sector ?? '';
+      $('f-address').value = p.location?.address ?? '';
+      state.features = Array.isArray(p.features) ? p.features.slice() : [];
+      paintFeatures();
+      setKind(p.kind === 'project' ? 'project' : 'single');
+      if (p.kind === 'project') {
+        const d = p.project || {};
+        $('f-developer').value = d.developer ?? '';
+        $('f-delivery').value = d.delivery_date ? String(d.delivery_date).slice(0, 10) : '';
+        $('f-total-units').value = d.total_units ?? '';
+        $('f-floors').value = d.floors ?? '';
+        state.amenities = Array.isArray(d.amenities) ? d.amenities.slice() : [];
+        paintAmenities();
+      } else {
+        const d = p.single || {};
+        $('f-price').value = d.price ?? '';
+        $('f-currency').value = d.currency === 'DOP' ? 'DOP' : 'USD';
+        $('f-bedrooms').value = d.bedrooms ?? '';
+        $('f-bathrooms').value = d.bathrooms ?? '';
+        $('f-area').value = d.area_m2 ?? '';
+        $('f-parking').value = d.parking ?? '';
+        $('f-availability').value = d.availability ?? 'available';
+      }
+    };
+
+    const mountMedia = (ownerId) => {
+      if (state.panel) { state.panel.destroy(); state.panel = null; }
+      state.panel = MediaUploader.mount($('media-slot'), {
+        ownerType: 'property',
+        ownerId: ownerId || undefined,
+        onChange: refreshSoon
+      });
+    };
+
+    let prevOverflow = '';
+    const showModal = () => {
+      prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const closeModal = (force = false) => {
+      if (!force && (state.saving || (state.panel && state.panel.isBusy()))) {
+        toast('Espera a que termine la subida de archivos.', 'warn');
+        return;
+      }
+      if (!force && state.panel && state.panel.hasPending() && !state.id) {
+        if (!window.confirm('Tienes archivos sin subir. Si sales, se descartarán. ¿Salir de todos modos?')) return;
+      }
+      if (state.panel) { state.panel.destroy(); state.panel = null; }
+      document.body.style.overflow = prevOverflow;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.setAttribute('aria-hidden', 'true');
+      state.id = null;
+      state.original = null;
+    };
+
+    const openForm = async (id) => {
+      resetForm();
+      state.id = id || null;
+      state.original = null;
+      $('form-title').textContent = id ? 'Editar propiedad' : 'Registrar propiedad';
+      $('form-sub').textContent = id ? 'Actualiza los datos, fotos y videos.' : 'Completa los datos y agrega fotos y videos.';
+      $('kind-group').classList.toggle('opacity-60', !!id);
+      $('kind-note').classList.toggle('hidden', !id);
+      $('archive-btn').classList.toggle('hidden', !id);
+      setSaving(false);
+      showModal();
+
+      if (!id) {
+        $('form-loading').classList.add('hidden');
+        $('form-fields').classList.remove('hidden');
+        mountMedia(null);
+        $('f-title').focus({ preventScroll: true });
+        return;
+      }
+
+      $('form-fields').classList.add('hidden');
+      $('form-loading').classList.remove('hidden');
+      $('save-btn').disabled = true;
+      try {
+        const p = await api('GET', `/properties/${encodeURIComponent(id)}`);
+        state.original = p;
+        fillForm(p);
+        $('form-loading').classList.add('hidden');
+        $('form-fields').classList.remove('hidden');
+        mountMedia(id);
+        $('save-btn').disabled = false;
+      } catch (err) {
+        closeModal(true);
+        toast(err.message, 'error');
+      }
+    };
+
+    // Construye el payload respetando lo que el formulario no edita (geo, resumen de unidades…)
+    const buildPayload = () => {
+      const orig = state.original || {};
+      const text = (id) => $(id).value.trim();
+      const orNull = (v) => (v === '' ? null : v);
+
+      const payload = {
+        title: text('f-title'),
+        description: orNull(text('f-description')),
+        operation: $('f-operation').value,
+        type: $('f-type').value,
+        lifecycle: $('f-lifecycle').value,
+        status: $('f-status').value,
+        location: {
+          ...(orig.location || {}),
+          country: orig.location?.country || 'DO',
+          province: orNull(text('f-province')),
+          city: orNull(text('f-city')),
+          sector: orNull(text('f-sector')),
+          address: orNull(text('f-address'))
+        },
+        features: state.features.slice()
+      };
+
+      if (state.kind === 'single') {
+        const price = numOrNull($('f-price').value);
+        payload.single = {
+          ...(orig.single || {}),
+          price: price === null ? null : String(price),
+          currency: $('f-currency').value,
+          bedrooms: intOrNull($('f-bedrooms').value),
+          bathrooms: numOrNull($('f-bathrooms').value),
+          area_m2: numOrNull($('f-area').value),
+          parking: intOrNull($('f-parking').value),
+          availability: $('f-availability').value
+        };
+      } else {
+        const delivery = $('f-delivery').value;
+        payload.project = {
+          ...(orig.project || {}),
+          developer: orNull(text('f-developer')),
+          delivery_date: delivery ? `${delivery}T00:00:00Z` : null,
+          total_units: intOrNull($('f-total-units').value) ?? 0,
+          floors: intOrNull($('f-floors').value),
+          amenities: state.amenities.slice()
+        };
+      }
+      return payload;
+    };
+
+    const validatePayload = (p) => {
+      if (p.title.length < 3) return 'El título debe tener al menos 3 caracteres.';
+      if (state.kind === 'single') {
+        const d = p.single;
+        if (d.price !== null && Number(d.price) < 0) return 'El precio no puede ser negativo.';
+        for (const [k, label] of [['bedrooms', 'Habitaciones'], ['bathrooms', 'Baños'], ['area_m2', 'Área'], ['parking', 'Parqueos']]) {
+          if (d[k] !== null && d[k] < 0) return `${label} no puede ser negativo.`;
+        }
+      }
+      return '';
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (state.saving) return;
+      setError('');
+
+      const payload = buildPayload();
+      const problem = validatePayload(payload);
+      if (problem) { setError(problem); $('f-title').focus(); return; }
+
+      setSaving(true);
+      try {
+        if (state.id) {
+          // ---- EDICIÓN: PATCH (kind no se envía); los archivos ya se suben en vivo desde el panel
+          await api('PATCH', `/properties/${encodeURIComponent(state.id)}`, payload);
+          toast('Cambios guardados');
+          closeModal(true);
+          await load({ silent: true });
+          return;
+        }
+
+        // ---- CREACIÓN: 1) crear la propiedad  2) subir los archivos en espera vinculados a su id
+        const created = await api('POST', '/properties', { kind: state.kind, ...payload });
+        const newId = created.id ?? created._id;
+        let result = { uploaded: 0, failed: 0 };
+        if (state.panel && state.panel.hasPending()) {
+          setSaving(true, 'Subiendo archivos…');
+          result = await state.panel.uploadPending('property', newId);
+        }
+        await load({ silent: true });
+
+        if (result.failed > 0) {
+          // La propiedad ya existe: pasamos a modo edición para que pueda reintentar los que fallaron
+          state.id = String(newId);
+          state.original = created;
+          $('form-title').textContent = 'Editar propiedad';
+          $('form-sub').textContent = 'La propiedad se creó, pero algunos archivos no se pudieron subir.';
+          $('kind-group').classList.add('opacity-60');
+          $('kind-note').classList.remove('hidden');
+          $('archive-btn').classList.remove('hidden');
+          setSaving(false);
+          setError(`Se subieron ${result.uploaded} archivo(s) y ${result.failed} fallaron. Usa "Reintentar" en la lista de arriba o cierra para continuar luego.`);
+          toast('Propiedad creada; revisa los archivos pendientes', 'warn');
+          return;
+        }
+        toast(result.uploaded ? `Propiedad creada con ${result.uploaded} archivo(s) multimedia` : 'Propiedad creada');
+        closeModal(true);
+      } catch (err) {
+        setSaving(false);
+        setError(err instanceof TypeError ? 'Error de conexión con el servidor.' : err.message);
+        return;
+      }
+      setSaving(false);
+    });
+
+    $('archive-btn').addEventListener('click', async () => {
+      if (!state.id || state.saving) return;
+      if (!window.confirm('¿Archivar esta propiedad? Dejará de mostrarse en el catálogo y en tu lista.')) return;
+      setSaving(true, 'Archivando…');
+      try {
+        await api('DELETE', `/properties/${encodeURIComponent(state.id)}`);
+        toast('Propiedad archivada');
+        closeModal(true);
+        await load({ silent: true });
+      } catch (err) {
+        setSaving(false);
+        setError(err.message);
+      }
+    });
+
+    $('new-btn').addEventListener('click', () => openForm(null));
+    $('modal-close').addEventListener('click', () => closeModal());
+    $('cancel-btn').addEventListener('click', () => closeModal());
+    modal.addEventListener('mousedown', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
+
     load();
   </script>
 </body>

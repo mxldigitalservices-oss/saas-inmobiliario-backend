@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.bootstrap import ensure_super_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
+from app.core.deps import tenant_from_host
 from app.core.keepalive import start_keepalive, stop_keepalive
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.core.postgres_db import close_postgres, get_db, init_postgres
@@ -21,6 +22,7 @@ from app.routes import auth as auth_routes
 from app.routes import expense as expense_routes
 from app.routes import health as health_routes
 from app.routes import invoice as invoice_routes
+from app.routes import media as media_routes
 from app.routes import property as property_routes
 from app.routes import tenant as tenant_routes
 from app.routes import unit as unit_routes
@@ -38,6 +40,7 @@ FRONTEND_PAGES = (
     "invoices",
     "settings",
     "admin",
+    "public",
 )
 
 
@@ -80,6 +83,7 @@ app.include_router(tenant_routes.router, prefix=API_PREFIX)
 app.include_router(admin_routes.router, prefix=API_PREFIX)
 app.include_router(property_routes.router, prefix=API_PREFIX)
 app.include_router(unit_routes.router, prefix=API_PREFIX)
+app.include_router(media_routes.router, prefix=API_PREFIX)
 app.include_router(invoice_routes.router, prefix=API_PREFIX)
 app.include_router(expense_routes.router, prefix=API_PREFIX)
 
@@ -102,8 +106,36 @@ def _serve_page(name: str):
     return handler
 
 
-# "/" muestra el login (index.html)
-app.add_api_route("/", _serve_page("index"), methods=["GET"], include_in_schema=False)
+def _page_response(name: str):
+    path = FRONTEND_DIR / "{}.html".format(name)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Página no encontrada")
+    return FileResponse(path, media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+
+async def _root(request: Request):
+    """"/" depende del dominio: si pertenece a una agencia (dominio propio verificado o
+    {slug}.BASE_DOMAIN) se muestra SU catálogo público; en el host de la plataforma, el login."""
+    try:
+        tenant = await tenant_from_host(request)
+    except Exception:  # pragma: no cover - nunca dejar sin login si falla la consulta
+        logger.exception("No se pudo resolver la agencia del dominio")
+        tenant = None
+    return _page_response("public" if tenant is not None else "index")
+
+
+app.add_api_route("/", _root, methods=["GET"], include_in_schema=False)
+
+# El agente entra por /login (en un dominio de agencia "/" es el catálogo público)
+app.add_api_route("/login", _serve_page("index"), methods=["GET"], include_in_schema=False)
+
+# Catálogo público compartible en el host de la plataforma: /a/<agencia> y /a/<agencia>/<propiedad>
+# (public.html lee el slug de la URL y lo envía como ?agency= a los endpoints públicos)
+app.add_api_route("/a/{agency}", _serve_page("public"), methods=["GET"], include_in_schema=False)
+app.add_api_route(
+    "/a/{agency}/{prop_slug}", _serve_page("public"), methods=["GET"], include_in_schema=False
+)
+
 # Las páginas se enlazan entre sí con rutas relativas (dashboard.html, units.html...)
 for _page in FRONTEND_PAGES:
     app.add_api_route(
@@ -112,6 +144,15 @@ for _page in FRONTEND_PAGES:
         methods=["GET"],
         include_in_schema=False,
     )
+
+# Fotos y videos subidos (MEDIA_DIR) -> /files/tenants/{tenant_id}/{archivo}
+_media_root = Path(settings.MEDIA_DIR).resolve()
+try:
+    _media_root.mkdir(parents=True, exist_ok=True)
+except OSError:  # pragma: no cover
+    logger.warning("No se pudo crear la carpeta de multimedia: %s", _media_root)
+if _media_root.is_dir():
+    app.mount("/files", StaticFiles(directory=str(_media_root)), name="media-files")
 
 # Recursos propios (CSS/JS/imágenes) que agregues en frontend/ -> /static/...
 if FRONTEND_DIR.is_dir():

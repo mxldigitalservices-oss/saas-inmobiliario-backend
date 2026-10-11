@@ -152,3 +152,4 @@ class TenantPublicOut(APIModel):
     name: str
     branding: Branding
     settings: TenantPreferences
+    logo_url: Optional[str] = None

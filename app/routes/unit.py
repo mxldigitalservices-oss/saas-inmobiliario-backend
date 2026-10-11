@@ -202,6 +202,48 @@ async def create_units_bulk(
 
 
 # ------------------------------------------------------------ unidad individual
+@router.get("/units", response_model=UnitPage)
+async def list_all_units(
+    property_id: Optional[PydanticObjectId] = Query(None),
+    params: PageParams = Depends(get_page_params),
+    flt: UnitFilter = Depends(unit_filter),
+    tenant: Tenant = Depends(get_current_tenant),
+    user: User = Depends(require_roles(*STAFF_ROLES)),
+):
+    """Inventario completo de la agencia (todas las unidades, de todos los proyectos)."""
+    query: Dict[str, Any] = {"tenant_id": tenant.id}
+    if property_id is not None:
+        query["property_id"] = property_id
+    if flt.availability:
+        query["availability"] = flt.availability.value
+    if flt.lifecycle:
+        query["lifecycle"] = flt.lifecycle.value
+    if flt.tower:
+        query["tower"] = flt.tower
+    if flt.floor is not None:
+        query["floor"] = flt.floor
+    if flt.min_bedrooms is not None:
+        query["bedrooms"] = {"$gte": flt.min_bedrooms}
+    price_range: Dict[str, Any] = {}
+    if flt.min_price is not None:
+        price_range["$gte"] = d128(flt.min_price)
+    if flt.max_price is not None:
+        price_range["$lte"] = d128(flt.max_price)
+    if price_range:
+        query["price"] = price_range
+
+    total = await Unit.find(query).count()
+    docs = (
+        await Unit.find(query)
+        .sort("property_id", "tower", "floor", "code")
+        .skip(params.skip)
+        .limit(params.page_size)
+        .to_list()
+    )
+    items = [UnitOut.model_validate(doc) for doc in docs]
+    return UnitPage.build(items, total, params)
+
+
 @router.get("/units/{unit_id}", response_model=UnitOut)
 async def get_unit(
     unit_id: PydanticObjectId,

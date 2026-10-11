@@ -10,7 +10,7 @@ from app.core import security
 from app.core.config import settings
 from app.models.enums import UserRole
 from app.models.super_admin import SuperAdmin
-from app.models.tenant import Tenant
+from app.models.tenant import SLUG_REGEX, Tenant
 from app.models.user import User
 from app.schemas.common import PageParams
 
@@ -75,6 +75,40 @@ def _request_host(request: Request) -> str:
     return host.split(",")[0].strip().lower().split(":")[0]
 
 
+async def _tenant_by_host(host: str) -> Optional[Tenant]:
+    """Dominio propio verificado o subdominio {slug}.BASE_DOMAIN. None si no hay coincidencia."""
+    if not host:
+        return None
+    tenant = await Tenant.find_one(
+        {"domains": {"$elemMatch": {"host": host, "verified": True}}}
+    )
+    base = settings.BASE_DOMAIN
+    if tenant is None and base and host.endswith("." + base):
+        slug = host[: -(len(base) + 1)]
+        if slug and "." not in slug:
+            tenant = await Tenant.find_one({"slug": slug})
+    return tenant
+
+
+def _platform_hosts() -> set:
+    """Hosts de la plataforma (login/panel): nunca representan a una agencia concreta."""
+    hosts = {"localhost", "127.0.0.1", "0.0.0.0", "testserver"}
+    base = settings.BASE_DOMAIN
+    if base:
+        hosts.update({base, "www." + base})
+    if settings.RAILWAY_PUBLIC_DOMAIN:
+        hosts.add(settings.RAILWAY_PUBLIC_DOMAIN.strip().lower())
+    return hosts
+
+
+async def tenant_from_host(request: Request) -> Optional[Tenant]:
+    """Agencia dueña del dominio de la petición, o None si es el host de la plataforma."""
+    host = _request_host(request)
+    if not host or host in _platform_hosts():
+        return None
+    return await _tenant_by_host(host)
+
+
 async def resolve_tenant(request: Request) -> Tenant:
     """Identifica la agencia por el Host header.
 
@@ -84,17 +118,7 @@ async def resolve_tenant(request: Request) -> Tenant:
     (La caché en Redis de esta resolución se añadirá en un bloque posterior.)
     """
     host = _request_host(request)
-    tenant: Optional[Tenant] = None
-
-    if host:
-        tenant = await Tenant.find_one(
-            {"domains": {"$elemMatch": {"host": host, "verified": True}}}
-        )
-        base = settings.BASE_DOMAIN
-        if tenant is None and base and host.endswith("." + base):
-            slug = host[: -(len(base) + 1)]
-            if slug and "." not in slug:
-                tenant = await Tenant.find_one({"slug": slug})
+    tenant = await _tenant_by_host(host)
 
     if tenant is None and settings.ALLOW_TENANT_HEADER:
         header_slug = (request.headers.get("x-tenant-slug") or "").strip().lower()
@@ -106,6 +130,39 @@ async def resolve_tenant(request: Request) -> Tenant:
             status_code=status.HTTP_404_NOT_FOUND, detail="Agencia no encontrada para este dominio"
         )
     return tenant
+
+
+async def resolve_public_tenant(
+    request: Request,
+    agency: Optional[str] = Query(
+        None,
+        max_length=63,
+        description="Slug de la agencia. Solo se usa cuando el Host no es de una agencia.",
+    ),
+) -> Tenant:
+    """Agencia del catálogo público (solo lectura).
+
+    Prioridad:
+    1) Host: dominio propio verificado o {slug}.BASE_DOMAIN. Si el Host pertenece a una
+       agencia, MANDA siempre y se ignora cualquier ?agency= (nunca se mezclan agencias
+       en el dominio de otra).
+    2) Host de la plataforma: ?agency=<slug> o header X-Tenant-Slug (enlaces compartibles
+       tipo /a/<slug>). Esto solo se acepta en endpoints públicos que exponen únicamente
+       datos publicados; las rutas autenticadas siguen usando resolve_tenant / el JWT.
+    """
+    tenant = await _tenant_by_host(_request_host(request))
+    if tenant is not None:
+        return tenant
+
+    slug = (agency or request.headers.get("x-tenant-slug") or "").strip().lower()
+    if slug and SLUG_REGEX.match(slug):
+        tenant = await Tenant.find_one({"slug": slug})
+        if tenant is not None:
+            return tenant
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Agencia no encontrada para este dominio"
+    )
 
 
 # ---------------------------------------------------------------- usuario / tenant

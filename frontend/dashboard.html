@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/static/session.js" data-guard="tenant"></script>
   <title>Panel de control</title>
 
   <!-- Guardia de ruta: se ejecuta antes de renderizar nada -->
@@ -172,7 +173,7 @@
           <!-- Accesos rápidos -->
           <section class="mt-10 fade-up" style="animation-delay:.26s">
             <h2 class="text-lg font-semibold text-slate-900">Accesos rápidos</h2>
-            <div class="mt-5 grid gap-5 sm:grid-cols-3">
+            <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <a href="properties.html" class="group rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:shadow-lg">
                 <p class="text-sm font-semibold text-slate-900">Registrar propiedad</p>
                 <p class="mt-1.5 text-sm text-slate-500">Añade un nuevo inmueble a tu cartera.</p>
@@ -187,6 +188,11 @@
                 <p class="text-sm font-semibold text-slate-900">Emitir factura</p>
                 <p class="mt-1.5 text-sm text-slate-500">Controla cobros y pagos pendientes.</p>
                 <span class="mt-4 inline-block text-sm font-medium text-indigo-600 transition group-hover:translate-x-1">Ir a facturación →</span>
+              </a>
+              <a id="qa-public" href="settings.html" class="group rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:shadow-lg">
+                <p class="text-sm font-semibold text-slate-900">Catálogo público</p>
+                <p class="mt-1.5 text-sm text-slate-500">Lo que ven tus clientes, con tus fotos y videos.</p>
+                <span class="mt-4 inline-block text-sm font-medium text-indigo-600 transition group-hover:translate-x-1">Ver mi catálogo →</span>
               </a>
             </div>
           </section>
@@ -329,6 +335,19 @@
     };
 
     loadMetrics();
+
+    // Enlace directo al catálogo público de la agencia
+    fetch(`${API}/tenants/me`, { headers: { 'Authorization': `Bearer ${getToken()}`, 'Accept': 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((t) => {
+        if (t && t.slug) {
+          const a = $('qa-public');
+          a.href = `/a/${encodeURIComponent(t.slug)}`;
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>

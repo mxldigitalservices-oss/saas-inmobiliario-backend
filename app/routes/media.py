@@ -30,7 +30,7 @@ from app.core.deps import (
     require_roles,
     require_writable_tenant,
 )
-from app.models.base import MAX_VIDEO_SECONDS
+from app.models.base import MAX_VIDEO_SECONDS, utcnow
 from app.models.enums import MediaKind, MediaOwnerType, MediaStatus, StorageProvider
 from app.models.media import Media, MediaOwnerRef, OriginalInfo, ProcessedInfo, StorageInfo
 from app.models.property import Property
@@ -351,10 +351,21 @@ async def upload_property_media(
     media = await _store_media(
         file=file, owner_type=MediaOwnerType.PROPERTY, owner_id=prop.id, tenant=tenant, user=user
     )
-    prop.media_ids.append(media.id)
-    if media.kind == MediaKind.IMAGE and (set_as_cover or prop.cover_media_id is None):
-        prop.cover_media_id = media.id
-    await prop.save()
+    # Operaciones ATÓMICAS: el cliente sube varios archivos en paralelo y un
+    # "leer -> modificar -> prop.save()" haría que una subida pisara a la otra
+    # (se perderían ids en media_ids o la portada). Con $push/$set cada una suma sola.
+    scope = {"_id": prop.id, "tenant_id": tenant.id}
+    await Property.find_one(scope).update(
+        {"$push": {"media_ids": media.id}, "$set": {"updated_at": utcnow()}}
+    )
+    if media.kind == MediaKind.IMAGE:
+        if set_as_cover:
+            await Property.find_one(scope).update({"$set": {"cover_media_id": media.id}})
+        else:
+            # solo si todavía no hay portada (null o ausente): la primera foto que llegue
+            await Property.find_one({**scope, "cover_media_id": None}).update(
+                {"$set": {"cover_media_id": media.id}}
+            )
     return MediaOut.model_validate(media)
 
 
@@ -409,8 +420,9 @@ async def upload_unit_media(
     media = await _store_media(
         file=file, owner_type=MediaOwnerType.UNIT, owner_id=unit.id, tenant=tenant, user=user
     )
-    unit.media_ids.append(media.id)
-    await unit.save()
+    await Unit.find_one({"_id": unit.id, "tenant_id": tenant.id}).update(
+        {"$push": {"media_ids": media.id}, "$set": {"updated_at": utcnow()}}
+    )
     return MediaOut.model_validate(media)
 
 

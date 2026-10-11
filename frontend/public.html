@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafc">
+  <title>Catálogo de propiedades</title>
+  <meta name="description" content="Catálogo de propiedades en venta y alquiler.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Catálogo de propiedades">
+  <meta property="og:description" content="Catálogo de propiedades en venta y alquiler.">
+  <meta property="og:image" content="">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    :root {
+      --brand: #4f46e5;          /* indigo-600 (sistema de diseño) — se sustituye por el color de la agencia */
+      --brand-dark: #4338ca;
+      --brand-soft: #eef2ff;
+      --on-brand: #ffffff;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+    html { scroll-padding-top: calc(5rem + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; }
+    body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; overflow-x: hidden; }
+
+    .btn-brand { background: var(--brand); color: var(--on-brand); }
+    .btn-brand:hover { background: var(--brand-dark); }
+    .text-brand { color: var(--brand); }
+    .bg-brand-soft { background: var(--brand-soft); }
+    .ring-brand:focus { box-shadow: 0 0 0 2px var(--brand); }
+
+    :where(.fld) { display:block; width:100%; border:0; border-radius:.75rem; background:#f8fafc; padding:.8rem 1rem; font-size:1rem; line-height:1.4; color:#0f172a; outline:none; box-shadow:inset 0 0 0 1px #f1f5f9; transition:box-shadow .15s, background-color .15s; }
+    .fld::placeholder { color:#94a3b8; }
+    .fld:focus { background:#fff; box-shadow:0 0 0 2px var(--brand); }
+    @media (min-width:640px) { .fld { font-size:.875rem; } }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp .5s ease-out both; }
+    @keyframes pulseSoft { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+    .skeleton { animation: pulseSoft 1.4s ease-in-out infinite; background:#e2e8f0; border-radius:.5rem; }
+    @keyframes sheetIn { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .sheet-in { animation: sheetIn .3s ease-out both; }
+    @media (prefers-reduced-motion: reduce) { .fade-up,.sheet-in,.skeleton { animation:none !important; } html { scroll-behavior:auto; } }
+
+    .no-scrollbar { scrollbar-width:none; -ms-overflow-style:none; }
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    .safe-b { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+    .desc { white-space: pre-line; overflow-wrap: anywhere; }
+    :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .fld:focus-visible { outline: none; }
+  </style>
+</head>
+<body class="min-h-full bg-slate-50 text-slate-900 antialiased">
+
+  <noscript>
+    <p style="padding:2rem;text-align:center;font-family:sans-serif">Necesitas activar JavaScript para ver el catálogo de propiedades.</p>
+  </noscript>
+
+  <!-- ============================ Estado: agencia no encontrada ============================ -->
+  <div id="missing" class="hidden min-h-screen items-center justify-center px-6 py-16">
+    <div class="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm sm:p-10">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>
+      </div>
+      <h1 class="mt-6 text-xl font-bold tracking-tight text-slate-900">No encontramos esta agencia</h1>
+      <p class="mt-2 text-sm leading-relaxed text-slate-500">El enlace o el dominio no corresponde a ninguna agencia activa. Verifica la dirección o pide a tu agente el enlace correcto de su catálogo.</p>
+    </div>
+  </div>
+
+  <!-- ============================ Sitio ============================ -->
+  <div id="site" class="flex min-h-screen flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-30 border-b border-slate-100 bg-white/85 backdrop-blur-md" style="top:0">
+      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:h-20 sm:px-8">
+        <a href="#top" id="brand-link" class="flex min-w-0 items-center gap-3">
+          <span id="brand-logo" class="flex h-10 w-10 flex-none items-center justify-center overflow-hidden rounded-xl btn-brand text-base font-bold shadow-sm sm:h-11 sm:w-11">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+          </span>
+          <span class="min-w-0">
+            <span id="brand-name" class="block truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">&nbsp;</span>
+            <span id="brand-sub" class="hidden truncate text-xs text-slate-500 sm:block"></span>
+          </span>
+        </a>
+        <nav class="flex items-center gap-2 sm:gap-3">
+          <a href="#catalogo" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:inline-flex">Propiedades</a>
+          <a href="#contacto" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:inline-flex">Contacto</a>
+          <a id="hdr-wa" href="#" target="_blank" rel="noopener" class="hidden items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 hover:shadow-md">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+            <span class="hidden sm:inline">WhatsApp</span><span class="sm:hidden">Escribir</span>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero + filtros -->
+    <section id="top" class="relative overflow-hidden">
+      <div class="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-soft opacity-80 blur-3xl"></div>
+      <div class="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full bg-brand-soft opacity-60 blur-3xl"></div>
+      <div class="relative mx-auto max-w-7xl px-4 pb-6 pt-10 sm:px-8 sm:pb-10 sm:pt-16">
+        <div class="fade-up max-w-2xl">
+          <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">Encuentra tu próximo hogar</h1>
+          <p id="hero-sub" class="mt-3 text-base text-slate-500 sm:mt-4 sm:text-lg">Explora nuestras propiedades en venta y alquiler.</p>
+        </div>
+
+        <form id="filters" class="fade-up mt-8 rounded-2xl border border-slate-100 bg-white p-3 shadow-md sm:mt-10 sm:p-4" style="animation-delay:.08s" role="search" novalidate>
+          <div class="grid gap-3 lg:grid-cols-[1fr_auto]">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
+              <div class="relative sm:col-span-2 lg:col-span-1">
+                <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                <input id="f-q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Buscar: sector, tipo, palabras clave…" aria-label="Buscar propiedades" class="fld pl-12">
+              </div>
+              <select id="f-type" aria-label="Tipo de inmueble" class="fld">
+                <option value="">Todos los tipos</option>
+                <option value="apartment">Apartamento</option>
+                <option value="house">Casa</option>
+                <option value="villa">Villa</option>
+                <option value="land">Terreno</option>
+                <option value="commercial">Local comercial</option>
+                <option value="other">Otro</option>
+              </select>
+              <select id="f-beds" aria-label="Habitaciones mínimas" class="fld">
+                <option value="">Habitaciones</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <div id="op-group" role="group" aria-label="Operación" class="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
+              <button type="button" data-op="" class="op-btn rounded-lg px-4 py-2.5 text-sm font-semibold transition">Todas</button>
+              <button type="button" data-op="sale" class="op-btn rounded-lg px-4 py-2.5 text-sm font-semibold transition">Comprar</button>
+              <button type="button" data-op="rent" class="op-btn rounded-lg px-4 py-2.5 text-sm font-semibold transition">Alquilar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Catálogo -->
+    <main id="catalogo" class="mx-auto w-full max-w-7xl flex-1 px-4 pb-16 sm:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p id="results-count" class="text-sm font-medium text-slate-500" aria-live="polite">&nbsp;</p>
+        <button id="clear-filters" type="button" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-brand transition hover:bg-brand-soft">Limpiar filtros</button>
+      </div>
+
+      <div id="list-error" class="mt-6 hidden flex-col gap-3 rounded-xl bg-rose-50 px-5 py-4 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between" role="alert">
+        <span id="list-error-text"></span>
+        <button id="retry-btn" type="button" class="flex-none self-start rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm transition hover:shadow-md">Reintentar</button>
+      </div>
+
+      <section id="grid" class="mt-6 grid gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3" aria-label="Propiedades"></section>
+
+      <div id="empty" class="mt-6 hidden rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-sm">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+        </div>
+        <h2 id="empty-title" class="mt-5 text-base font-semibold text-slate-900">No encontramos propiedades</h2>
+        <p id="empty-text" class="mt-1.5 text-sm text-slate-500">Prueba cambiando los filtros de búsqueda.</p>
+      </div>
+
+      <div id="more-wrap" class="mt-10 hidden justify-center">
+        <button id="more-btn" type="button" class="rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md">Ver más propiedades</button>
+      </div>
+    </main>
+
+    <!-- Footer / contacto -->
+    <footer id="contacto" class="border-t border-slate-100 bg-white">
+      <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-8 sm:py-12 md:grid-cols-[1.4fr_1fr]">
+        <div>
+          <p id="ft-name" class="text-lg font-bold tracking-tight text-slate-900"></p>
+          <p id="ft-tagline" class="mt-2 max-w-md text-sm text-slate-500"></p>
+        </div>
+        <div id="ft-contact" class="space-y-3 text-sm"></div>
+      </div>
+      <div class="border-t border-slate-100">
+        <p id="ft-copy" class="mx-auto max-w-7xl px-4 py-5 text-xs text-slate-400 sm:px-8 safe-b"></p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============================ Ficha de la propiedad ============================ -->
+  <div id="detail" class="fixed inset-0 z-40 hidden overflow-y-auto overscroll-contain bg-slate-900/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="d-title-sr" aria-hidden="true">
+    <div id="detail-panel" class="sheet-in relative mx-auto min-h-full w-full max-w-6xl bg-slate-50 sm:my-6 sm:min-h-0 sm:rounded-3xl sm:shadow-2xl"></div>
+  </div>
+
+  <!-- ============================ Lightbox ============================ -->
+  <div id="lightbox" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/95" role="dialog" aria-modal="true" aria-label="Galería a pantalla completa" aria-hidden="true">
+    <button id="lb-close" type="button" aria-label="Cerrar galería" class="absolute right-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20" style="top:max(.75rem, env(safe-area-inset-top))">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <button id="lb-prev" type="button" aria-label="Anterior" class="absolute left-2 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20 sm:left-6">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+    </button>
+    <button id="lb-next" type="button" aria-label="Siguiente" class="absolute right-2 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20 sm:right-6">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </button>
+    <div id="lb-stage" class="flex h-full w-full items-center justify-center px-2 py-16 sm:px-16" style="touch-action:pan-y"></div>
+    <p id="lb-count" class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur" style="bottom:max(1rem, env(safe-area-inset-bottom))"></p>
+  </div>
+
+  <!-- Aviso -->
+  <div id="toast" class="pointer-events-none fixed inset-x-4 z-[70] hidden justify-center" style="bottom:calc(5.5rem + env(safe-area-inset-bottom))">
+    <div id="toast-box" class="pointer-events-auto rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg"></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var API = '/api/v1';
+    var PAGE_SIZE = 12;
+
+    /* ---------------------------------------------------------------- utilidades */
+    function $(id) { return document.getElementById(id); }
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function norm(v) { return String(v == null ? '' : v).trim().toLowerCase(); }
+    function enc(v) { return encodeURIComponent(v); }
+    /* Solo archivos propios del servidor (/files/...): nunca javascript:, data: ni dominios ajenos */
+    function safeMedia(u) {
+      u = String(u == null ? '' : u);
+      return /^\/files\/[A-Za-z0-9_\-./]+$/.test(u) ? u : '';
+    }
+    function num(v) { var n = Number(v); return isFinite(n) ? n : null; }
+    function money(amount, currency) {
+      var n = num(amount);
+      if (amount === null || amount === undefined || amount === '' || n === null) return null;
+      try {
+        return new Intl.NumberFormat('es-DO', { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(n);
+      } catch (e) { return (currency || '') + ' ' + n.toLocaleString('es-DO'); }
+    }
+    function fmtMonth(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      return new Intl.DateTimeFormat('es-DO', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d);
+    }
+    function icon(name, cls) {
+      var P = {
+        bed: 'M3 18v-7a2 2 0 012-2h14a2 2 0 012 2v7M3 14h18M7 9V7a1 1 0 011-1h3a1 1 0 011 1v2',
+        bath: 'M4 12h16v3a4 4 0 01-4 4H8a4 4 0 01-4-4v-3zM6 12V6a2 2 0 012-2h1M8 19l-1 2M16 19l1 2',
+        area: 'M4 4h6M4 4v6M20 20h-6M20 20v-6M4 20l6-6M20 4l-6 6',
+        car: 'M5 16l1.5-5a2 2 0 012-1.5h7a2 2 0 012 1.5L19 16M5 16h14M5 16v2M19 16v2M8 16h.01M16 16h.01',
+        pin: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0zM19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
+        wa: 'M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z',
+        phone: 'M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z',
+        mail: 'M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75',
+        left: 'M15.75 19.5L8.25 12l7.5-7.5',
+        right: 'M8.25 4.5l7.5 7.5-7.5 7.5',
+        x: 'M6 18L18 6M6 6l12 12',
+        share: 'M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z',
+        expand: 'M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15',
+        map: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z'
+      };
+      return '<svg class="' + (cls || 'h-5 w-5') + '" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="' + P[name] + '"/></svg>';
+    }
+
+    var toastTimer;
+    function toast(msg) {
+      $('toast-box').textContent = msg;
+      $('toast').classList.remove('hidden');
+      $('toast').classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { $('toast').classList.add('hidden'); $('toast').classList.remove('flex'); }, 2800);
+    }
+
+    /* ---------------------------------------------------------------- catálogos */
+    var OPERATION = { sale: 'Venta', rent: 'Alquiler', both: 'Venta y alquiler' };
+    var TYPE = { apartment: 'Apartamento', house: 'Casa', villa: 'Villa', land: 'Terreno', commercial: 'Local comercial', other: 'Otro' };
+    var LIFECYCLE = { listo: 'Listo para entrega', construccion: 'En construcción', en_plano: 'En planos' };
+    var AVAIL = {
+      reserved: { label: 'Reservada', cls: 'bg-amber-50 text-amber-700' },
+      sold: { label: 'Vendida', cls: 'bg-rose-50 text-rose-700' },
+      rented: { label: 'Alquilada', cls: 'bg-slate-100 text-slate-600' },
+      available: { label: 'Disponible', cls: 'bg-emerald-50 text-emerald-700' }
+    };
+
+    /* ---------------------------------------------------------------- contexto multi-tenant
+     * 1) Dominio propio / subdominio ({slug}.BASE_DOMAIN): el servidor identifica la agencia por el Host.
+     * 2) Host de la plataforma: la agencia viene en la URL  /a/<agencia>[/<propiedad>]
+     *    o  public.html?agency=<agencia>[&p=<propiedad>]  y se envía como ?agency= a la API.
+     */
+    var SLUG_RE = /^[a-z0-9][a-z0-9-]{0,62}$/;
+    var ctx = (function () {
+      var m = location.pathname.match(/^\/a\/([^/]+)(?:\/([^/]+))?\/?$/);
+      var qs = new URLSearchParams(location.search);
+      var agency = null, prop = null, mode = 'host';
+      if (m) {
+        agency = norm(decodeURIComponent(m[1])); prop = m[2] ? norm(decodeURIComponent(m[2])) : null; mode = 'path';
+      } else {
+        agency = norm(qs.get('agency') || qs.get('agencia')) || null;
+        if (agency) mode = 'query';
+      }
+      if (agency && !SLUG_RE.test(agency)) agency = '~invalid~';
+      if (!prop) prop = norm(qs.get('p')) || null;
+      return { agency: agency, prop: prop, mode: mode };
+    })();
+
+    function currentProp() {
+      var m = location.pathname.match(/^\/a\/([^/]+)\/([^/]+)\/?$/);
+      if (m) return norm(decodeURIComponent(m[2]));
+      return norm(new URLSearchParams(location.search).get('p')) || null;
+    }
+    function listUrl() {
+      if (ctx.mode === 'path') return '/a/' + enc(ctx.agency);
+      if (ctx.mode === 'query') return location.pathname + '?agency=' + enc(ctx.agency);
+      return location.pathname || '/';
+    }
+    function propUrl(slug) {
+      if (ctx.mode === 'path') return '/a/' + enc(ctx.agency) + '/' + enc(slug);
+      if (ctx.mode === 'query') return location.pathname + '?agency=' + enc(ctx.agency) + '&p=' + enc(slug);
+      return (location.pathname || '/') + '?p=' + enc(slug);
+    }
+
+    function AgencyMissing() { this.agencyMissing = true; this.message = 'Agencia no encontrada'; }
+    AgencyMissing.prototype = Object.create(Error.prototype);
+
+    function api(path, params, signal) {
+      var url = new URL(API + path, location.origin);
+      if (ctx.agency) url.searchParams.set('agency', ctx.agency);
+      Object.keys(params || {}).forEach(function (k) {
+        var v = params[k];
+        if (v !== '' && v != null) url.searchParams.set(k, v);
+      });
+      return fetch(url.toString(), { headers: { 'Accept': 'application/json' }, signal: signal }).then(function (res) {
+        return res.json().catch(function () { return null; }).then(function (data) {
+          if (!res.ok) {
+            var detail = data && typeof data.detail === 'string' ? data.detail : '';
+            if (res.status === 404 && /^agencia/i.test(detail)) throw new AgencyMissing();
+            var err = new Error(detail || ('Error ' + res.status));
+            err.status = res.status;
+            throw err;
+          }
+          return data;
+        });
+      });
+    }
+
+    /* ---------------------------------------------------------------- marca blanca */
+    var agency = null;
+    function hexToRgb(h) {
+      var m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h);
+      return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+    }
+    function mix(rgb, target, t) {
+      return 'rgb(' + rgb.map(function (c, i) { return Math.round(c * (1 - t) + target[i] * t); }).join(',') + ')';
+    }
+    function applyBrand(t) {
+      var color = (t && t.branding && t.branding.primary_color) || '';
+      var rgb = hexToRgb(color);
+      // El valor por defecto del backend (#0A5FFF) no se considera "marca propia": se mantiene el índigo del sistema
+      if (!rgb || color.toLowerCase() === '#0a5fff') return;
+      var lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+      var root = document.documentElement.style;
+      root.setProperty('--brand', color);
+      root.setProperty('--brand-dark', mix(rgb, [0, 0, 0], 0.14));
+      root.setProperty('--brand-soft', mix(rgb, [255, 255, 255], 0.9));
+      root.setProperty('--on-brand', lum > 0.62 ? '#0f172a' : '#ffffff');
+    }
+
+    function contactOf() { return (agency && agency.branding && agency.branding.contact) || {}; }
+    function waNumber() {
+      var raw = String(contactOf().whatsapp || '').replace(/\D/g, '');
+      if (raw.length === 10) raw = '1' + raw; // números dominicanos (809/829/849) sin prefijo de país
+      return raw.length >= 8 && raw.length <= 15 ? raw : null;
+    }
+    function waLink(text) {
+      var n = waNumber();
+      return n ? 'https://wa.me/' + n + '?text=' + enc(text) : null;
+    }
+    function phoneHref() {
+      var raw = String(contactOf().phone || '').replace(/[^\d+]/g, '');
+      return raw.replace(/\D/g, '').length >= 7 ? 'tel:' + raw : null;
+    }
+    function mailHref() {
+      var m = String(contactOf().email || '').trim();
+      return /^[^@\s<>"]+@[^@\s<>"]+\.[^@\s<>"]+$/.test(m) ? 'mailto:' + m : null;
+    }
+
+    function renderAgency() {
+      var name = agency.name || 'Inmobiliaria';
+      document.title = 'Propiedades · ' + name;
+      setMeta('Propiedades · ' + name, (agency.branding && agency.branding.tagline) || 'Catálogo de propiedades en venta y alquiler.', '');
+      $('brand-name').textContent = name;
+      var tag = agency.branding && agency.branding.tagline;
+      if (tag) { $('brand-sub').textContent = tag; $('brand-sub').classList.remove('hidden', 'sm:block'); $('brand-sub').classList.add('hidden', 'sm:block'); $('hero-sub').textContent = tag; }
+      var logo = safeMedia(agency.logo_url);
+      if (logo) {
+        $('brand-logo').className = 'flex h-10 w-10 flex-none items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-100 sm:h-11 sm:w-11';
+        $('brand-logo').innerHTML = '<img src="' + esc(logo) + '" alt="" class="h-full w-full object-cover">';
+      } else {
+        $('brand-logo').textContent = name.trim().charAt(0).toUpperCase();
+      }
+      var wa = waLink('Hola, quisiera información sobre las propiedades de ' + name + '.');
+      if (wa) { var a = $('hdr-wa'); a.href = wa; a.classList.remove('hidden'); a.classList.add('inline-flex'); }
+
+      $('ft-name').textContent = name;
+      $('ft-tagline').textContent = tag || '';
+      var rows = [];
+      if (waNumber()) rows.push(['wa', 'WhatsApp', contactOf().whatsapp, waLink('Hola, quisiera información sobre las propiedades de ' + name + '.')]);
+      if (phoneHref()) rows.push(['phone', 'Teléfono', contactOf().phone, phoneHref()]);
+      if (mailHref()) rows.push(['mail', 'Correo', contactOf().email, mailHref()]);
+      $('ft-contact').innerHTML = rows.length
+        ? rows.map(function (r) {
+            return '<a href="' + esc(r[3]) + '"' + (r[0] === 'wa' ? ' target="_blank" rel="noopener"' : '') + ' class="flex items-center gap-3 rounded-xl p-2 -mx-2 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">' +
+              '<span class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-brand-soft text-brand">' + icon(r[0], 'h-5 w-5') + '</span>' +
+              '<span class="min-w-0"><span class="block text-xs text-slate-400">' + r[1] + '</span><span class="block truncate font-medium">' + esc(r[2]) + '</span></span></a>';
+          }).join('')
+        : '<p class="text-slate-400">Contacta a la agencia para más información.</p>';
+      $('ft-copy').textContent = '© ' + new Date().getFullYear() + ' ' + name + '. Todos los derechos reservados.';
+    }
+
+    function setMeta(title, desc, image) {
+      var set = function (sel, val) { var el = document.querySelector(sel); if (el) el.setAttribute('content', val); };
+      set('meta[name="description"]', desc);
+      set('meta[property="og:title"]', title);
+      set('meta[property="og:description"]', desc);
+      set('meta[property="og:image"]', image ? location.origin + image : '');
+    }
+
+    /* ---------------------------------------------------------------- filtros y listado */
+    var filters = { q: '', operation: '', type: '', min_bedrooms: '' };
+    var items = [], page = 1, pages = 1, total = 0, listAbort = null;
+
+    function paintOps() {
+      document.querySelectorAll('.op-btn').forEach(function (b) {
+        var on = b.getAttribute('data-op') === filters.operation;
+        b.className = 'op-btn rounded-lg px-4 py-2.5 text-sm font-semibold transition ' + (on ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900');
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+    function hasFilters() { return !!(filters.q || filters.operation || filters.type || filters.min_bedrooms); }
+
+    function priceLine(p) {
+      if (p.kind === 'project') {
+        var s = p.project && p.project.units_summary;
+        var lo = s && money(s.price_min, 'USD');
+        return lo ? { pre: 'Desde', value: lo } : { pre: '', value: 'Proyecto' };
+      }
+      var d = p.single || {};
+      var v = money(d.price, d.currency);
+      return { pre: '', value: v || 'Consultar precio' };
+    }
+
+    function specs(p) {
+      var out = [];
+      if (p.kind === 'project') {
+        var s = p.project && p.project.units_summary;
+        if (s && s.available != null) out.push(['bed', s.available + ' unidades disponibles']);
+        return out;
+      }
+      var d = p.single || {};
+      if (d.bedrooms != null) out.push(['bed', d.bedrooms + (d.bedrooms === 1 ? ' hab' : ' hab')]);
+      if (d.bathrooms != null) out.push(['bath', d.bathrooms + (d.bathrooms === 1 ? ' baño' : ' baños')]);
+      if (d.area_m2 != null) out.push(['area', d.area_m2 + ' m²']);
+      if (d.parking) out.push(['car', d.parking + ' parq.']);
+      return out;
+    }
+
+    function locationLine(p) { return [p.location && p.location.sector, p.location && p.location.city].filter(Boolean).join(', '); }
+
+    function card(p, i) {
+      var thumb = safeMedia(p.cover_thumb_url || p.cover_url);
+      var full = safeMedia(p.cover_url);
+      var price = priceLine(p);
+      var av = p.single && AVAIL[p.single.availability];
+      var statusBadge = av && p.single.availability !== 'available'
+        ? '<span class="absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm ' + av.cls + '">' + av.label + '</span>' : '';
+      var sp = specs(p).map(function (s) {
+        return '<span class="inline-flex items-center gap-1.5 text-slate-500">' + icon(s[0], 'h-4 w-4 text-slate-400') + esc(s[1]) + '</span>';
+      }).join('');
+      var imgTag = thumb
+        ? '<img src="' + esc(thumb) + '"' + (full && full !== thumb ? ' srcset="' + esc(thumb) + ' 480w, ' + esc(full) + ' 1920w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"' : '') +
+          ' alt="' + esc(p.title) + '" loading="lazy" decoding="async" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">'
+        : '<div class="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-300">' + icon('map', 'h-10 w-10') + '<span class="text-xs">Fotos próximamente</span></div>';
+      return '<a href="' + esc(propUrl(p.slug)) + '" data-slug="' + esc(p.slug) + '" class="card fade-up group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg" style="animation-delay:' + (Math.min(i, 8) * 0.04) + 's">' +
+        '<div class="relative aspect-[4/3] overflow-hidden bg-slate-100">' + imgTag +
+          '<span class="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur">' + esc(OPERATION[p.operation] || '') + '</span>' +
+          (p.lifecycle && p.lifecycle !== 'listo' ? '<span class="absolute right-3 top-3 rounded-full btn-brand px-3 py-1 text-xs font-semibold shadow-sm">' + esc(LIFECYCLE[p.lifecycle] || '') + '</span>' : '') +
+          statusBadge +
+        '</div>' +
+        '<div class="flex flex-1 flex-col p-5">' +
+          '<p class="text-xl font-bold tracking-tight text-slate-900">' + (price.pre ? '<span class="mr-1 text-sm font-medium text-slate-400">' + price.pre + '</span>' : '') + esc(price.value) + '</p>' +
+          '<h3 class="mt-1.5 line-clamp-2 text-base font-semibold leading-snug text-slate-900">' + esc(p.title) + '</h3>' +
+          '<p class="mt-1.5 flex min-h-[1.25rem] items-center gap-1.5 truncate text-sm text-slate-500">' + (locationLine(p) ? icon('pin', 'h-4 w-4 flex-none text-slate-400') + '<span class="truncate">' + esc(locationLine(p)) + '</span>' : '') + '</p>' +
+          '<div class="mt-4 flex min-h-[1.5rem] flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 pt-4 text-xs font-medium">' + sp + '</div>' +
+        '</div>' +
+      '</a>';
+    }
+
+    function skeletons() {
+      return Array.from({ length: 6 }, function () {
+        return '<div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div class="skeleton aspect-[4/3] !rounded-none"></div><div class="p-5"><div class="skeleton h-6 w-1/2"></div><div class="skeleton mt-3 h-4 w-3/4"></div><div class="skeleton mt-3 h-4 w-1/3"></div></div></div>';
+      }).join('');
+    }
+
+    function renderList() {
+      var grid = $('grid');
+      $('clear-filters').classList.toggle('hidden', !hasFilters());
+      $('results-count').innerHTML = total
+        ? 'Mostrando <strong class="text-slate-900">' + items.length + '</strong> de <strong class="text-slate-900">' + total + '</strong> ' + (total === 1 ? 'propiedad' : 'propiedades')
+        : '&nbsp;';
+      $('more-wrap').classList.toggle('hidden', !(page < pages));
+      $('more-wrap').classList.toggle('flex', page < pages);
+      if (!items.length) {
+        grid.innerHTML = '';
+        $('empty').classList.remove('hidden');
+        $('empty-title').textContent = hasFilters() ? 'No encontramos propiedades con esos filtros' : 'Aún no hay propiedades publicadas';
+        $('empty-text').textContent = hasFilters() ? 'Prueba cambiando o limpiando los filtros.' : 'Vuelve pronto: estamos preparando nuevas opciones para ti.';
+        return;
+      }
+      $('empty').classList.add('hidden');
+      grid.innerHTML = items.map(card).join('');
+    }
+
+    function showListError(err) {
+      $('list-error-text').textContent = (err instanceof TypeError || (err && err.name === 'TypeError'))
+        ? 'No pudimos conectar con el servidor. Revisa tu conexión.'
+        : (err.message || 'No se pudieron cargar las propiedades.');
+      $('list-error').classList.remove('hidden');
+      $('list-error').classList.add('flex');
+    }
+
+    function loadList(append) {
+      if (listAbort) listAbort.abort();
+      listAbort = ('AbortController' in window) ? new AbortController() : null;
+      $('list-error').classList.add('hidden');
+      $('list-error').classList.remove('flex');
+      if (!append) { $('empty').classList.add('hidden'); $('grid').innerHTML = skeletons(); }
+      var target = append ? page + 1 : 1;
+      var params = { page: target, page_size: PAGE_SIZE, q: filters.q, operation: filters.operation, type: filters.type, min_bedrooms: filters.min_bedrooms };
+      return api('/properties/public', params, listAbort && listAbort.signal).then(function (data) {
+        var got = (data && data.items) || [];
+        items = append ? items.concat(got) : got;
+        page = (data && data.page) || target;
+        pages = (data && data.pages) || 1;
+        total = (data && data.total) || items.length;
+        renderList();
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        if (err && err.agencyMissing) { showMissing(); return; }
+        if (!append) $('grid').innerHTML = '';
+        showListError(err);
+      });
+    }
+
+    var qTimer;
+    $('f-q').addEventListener('input', function () {
+      clearTimeout(qTimer);
+      qTimer = setTimeout(function () { filters.q = $('f-q').value.trim(); loadList(false); }, 450);
+    });
+    $('filters').addEventListener('submit', function (e) { e.preventDefault(); clearTimeout(qTimer); filters.q = $('f-q').value.trim(); loadList(false); });
+    $('f-type').addEventListener('change', function () { filters.type = this.value; loadList(false); });
+    $('f-beds').addEventListener('change', function () { filters.min_bedrooms = this.value; loadList(false); });
+    $('op-group').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-op]');
+      if (!b) return;
+      filters.operation = b.getAttribute('data-op');
+      paintOps();
+      loadList(false);
+    });
+    $('clear-filters').addEventListener('click', function () {
+      filters = { q: '', operation: '', type: '', min_bedrooms: '' };
+      $('f-q').value = ''; $('f-type').value = ''; $('f-beds').value = '';
+      paintOps();
+      loadList(false);
+    });
+    $('retry-btn').addEventListener('click', function () { loadList(false); });
+    $('more-btn').addEventListener('click', function () { loadList(true); });
+
+    /* ---------------------------------------------------------------- ficha */
+    var det = { prop: null, units: [], media: [], idx: 0, opener: null, open: false };
+    var detail = $('detail'), panel = $('detail-panel');
+    var lightbox = $('lightbox');
+
+    function lockScroll(on) { document.documentElement.style.overflow = on ? 'hidden' : ''; }
+
+    function trapTab(container, e) {
+      if (e.key !== 'Tab') return;
+      var f = container.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])');
+      f = Array.prototype.filter.call(f, function (el) { return el.offsetParent !== null || el === document.activeElement; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function openShell() {
+      det.open = true;
+      detail.classList.remove('hidden');
+      detail.setAttribute('aria-hidden', 'false');
+      detail.scrollTop = 0;
+      lockScroll(true);
+    }
+    function closeShell() {
+      det.open = false;
+      closeLightbox(true);
+      detail.classList.add('hidden');
+      detail.setAttribute('aria-hidden', 'true');
+      panel.innerHTML = '';
+      lockScroll(false);
+      document.title = agency ? 'Propiedades · ' + agency.name : document.title;
+      if (agency) setMeta('Propiedades · ' + agency.name, (agency.branding && agency.branding.tagline) || 'Catálogo de propiedades en venta y alquiler.', '');
+      if (det.opener && document.contains(det.opener)) { try { det.opener.focus({ preventScroll: true }); } catch (e) {} }
+      det.opener = null;
+    }
+
+    function topBar(title) {
+      return '<div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-100 bg-white/90 px-3 py-3 backdrop-blur sm:rounded-t-3xl sm:px-6" style="padding-top:max(.75rem, env(safe-area-inset-top))">' +
+        '<button type="button" data-act="close" class="flex min-h-[2.75rem] items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">' + icon('left', 'h-5 w-5') + 'Volver</button>' +
+        '<p class="hidden min-w-0 flex-1 truncate text-center text-sm font-semibold text-slate-900 sm:block">' + esc(title || '') + '</p>' +
+        '<button type="button" data-act="share" class="flex min-h-[2.75rem] items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">' + icon('share', 'h-5 w-5') + '<span class="hidden sm:inline">Compartir</span></button>' +
+      '</div>';
+    }
+
+    function renderDetailLoading() {
+      panel.innerHTML = topBar('') +
+        '<div class="p-4 sm:p-8"><div class="skeleton aspect-[4/3] w-full !rounded-2xl sm:aspect-[16/8]"></div><div class="skeleton mt-6 h-8 w-2/3"></div><div class="skeleton mt-3 h-5 w-1/3"></div><div class="skeleton mt-6 h-24 w-full"></div></div>';
+      var h = document.createElement('h2'); // título accesible mientras carga
+    }
+
+    function renderDetailError(msg, notFound) {
+      panel.innerHTML = topBar('') +
+        '<div class="px-6 py-20 text-center"><div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">' + icon('map', 'h-7 w-7') + '</div>' +
+        '<h2 id="d-title-sr" class="mt-6 text-xl font-bold text-slate-900">' + (notFound ? 'Esta propiedad ya no está disponible' : 'No pudimos cargar la propiedad') + '</h2>' +
+        '<p class="mt-2 text-sm text-slate-500">' + esc(msg || '') + '</p>' +
+        '<button type="button" data-act="close" class="mt-8 rounded-xl btn-brand px-6 py-3 text-sm font-semibold shadow-sm transition hover:shadow-md">Ver todas las propiedades</button></div>';
+    }
+
+    function mapHref(p) {
+      var geo = p.location && p.location.geo && p.location.geo.coordinates;
+      if (geo && geo.length === 2 && isFinite(geo[0]) && isFinite(geo[1])) return 'https://www.google.com/maps?q=' + geo[1] + ',' + geo[0];
+      var addr = [p.location && p.location.address, p.location && p.location.sector, p.location && p.location.city, p.location && p.location.province, 'República Dominicana'].filter(Boolean).join(', ');
+      return addr && (p.location.address || p.location.sector || p.location.city)
+        ? 'https://www.google.com/maps/search/?api=1&query=' + enc(addr) : null;
+    }
+
+    function contactButtons(p, big) {
+      var msg = 'Hola, me interesa "' + p.title + '" (' + location.origin + propUrl(p.slug) + '). ¿Me pueden dar más información?';
+      var wa = waLink(msg), tel = phoneHref(), mail = mailHref();
+      var cls = big ? 'min-h-[3.25rem] text-base' : 'min-h-[2.75rem] text-sm';
+      var html = '';
+      if (wa) html += '<a href="' + esc(wa) + '" target="_blank" rel="noopener" class="flex ' + cls + ' w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 font-semibold text-white shadow-sm transition hover:bg-emerald-700 hover:shadow-md">' + icon('wa', 'h-5 w-5') + 'Escribir por WhatsApp</a>';
+      if (tel) html += '<a href="' + esc(tel) + '" class="flex ' + cls + ' w-full items-center justify-center gap-2 rounded-xl bg-white px-5 font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50">' + icon('phone', 'h-5 w-5') + 'Llamar</a>';
+      if (mail && !wa) html += '<a href="' + esc(mail + '?subject=' + enc('Consulta: ' + p.title)) + '" class="flex ' + cls + ' w-full items-center justify-center gap-2 rounded-xl btn-brand px-5 font-semibold shadow-sm transition hover:shadow-md">' + icon('mail', 'h-5 w-5') + 'Enviar correo</a>';
+      return html || '<p class="text-sm text-slate-500">Contacta a la agencia para más información.</p>';
+    }
+
+    function unitsTable(p) {
+      if (!det.units.length) return '';
+      var rows = det.units.map(function (u) {
+        var av = AVAIL[u.availability] || AVAIL.available;
+        var msg = 'Hola, me interesa la unidad ' + u.code + ' de "' + p.title + '" (' + location.origin + propUrl(p.slug) + ').';
+        var wa = waLink(msg);
+        return '<tr class="border-t border-slate-100">' +
+          '<td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">' + esc(u.code) + (u.label ? '<span class="ml-2 font-normal text-slate-400">' + esc(u.label) + '</span>' : '') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3 text-slate-600">' + esc([u.tower, u.floor != null ? 'Piso ' + u.floor : ''].filter(Boolean).join(' · ') || '—') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3 text-slate-600">' + (u.bedrooms != null ? esc(u.bedrooms) : '—') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3 text-slate-600">' + (u.bathrooms != null ? esc(u.bathrooms) : '—') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3 text-slate-600">' + (u.area_m2 != null ? esc(u.area_m2) + ' m²' : '—') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">' + esc(money(u.price, u.currency) || '—') + '</td>' +
+          '<td class="whitespace-nowrap px-4 py-3"><span class="rounded-full px-2.5 py-1 text-xs font-semibold ' + av.cls + '">' + av.label + '</span></td>' +
+          '<td class="whitespace-nowrap px-4 py-3 text-right">' + (wa && u.availability === 'available' ? '<a href="' + esc(wa) + '" target="_blank" rel="noopener" class="text-sm font-semibold text-emerald-700 hover:underline">Consultar</a>' : '') + '</td></tr>';
+      }).join('');
+      return '<section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7"><h2 class="text-lg font-bold tracking-tight text-slate-900">Unidades disponibles</h2>' +
+        '<div class="-mx-5 mt-4 overflow-x-auto sm:-mx-7"><table class="min-w-full text-left text-sm"><thead><tr class="text-xs font-semibold uppercase tracking-wider text-slate-400">' +
+        '<th class="px-4 pb-3">Unidad</th><th class="px-4 pb-3">Ubicación</th><th class="px-4 pb-3">Hab.</th><th class="px-4 pb-3">Baños</th><th class="px-4 pb-3">Área</th><th class="px-4 pb-3">Precio</th><th class="px-4 pb-3">Estado</th><th class="px-4 pb-3"></th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
+    }
+
+    function renderDetail() {
+      var p = det.prop;
+      var price = priceLine(p);
+      var avail = p.single && AVAIL[p.single.availability];
+      var sp = specs(p);
+      var map = mapHref(p);
+      var proj = p.project || {};
+      var descText = p.description || '';
+      var longDesc = descText.length > 520;
+
+      var badges = [
+        '<span class="rounded-full btn-brand px-3 py-1 text-xs font-semibold">' + esc(OPERATION[p.operation] || '') + '</span>',
+        '<span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">' + esc(TYPE[p.type] || 'Inmueble') + '</span>',
+        p.lifecycle ? '<span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">' + esc(LIFECYCLE[p.lifecycle] || '') + '</span>' : '',
+        avail && p.single.availability !== 'available' ? '<span class="rounded-full px-3 py-1 text-xs font-semibold ' + avail.cls + '">' + avail.label + '</span>' : ''
+      ].join('');
+
+      var specGrid = sp.length
+        ? '<div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">' + sp.map(function (s) {
+            return '<div class="flex items-center gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-slate-100"><span class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-brand-soft text-brand">' + icon(s[0], 'h-5 w-5') + '</span><span class="text-sm font-semibold text-slate-800">' + esc(s[1]) + '</span></div>';
+          }).join('') + '</div>' : '';
+
+      var projectBlock = '';
+      if (p.kind === 'project') {
+        var facts = [
+          proj.developer ? ['Desarrollador', proj.developer] : null,
+          proj.delivery_date ? ['Entrega', fmtMonth(proj.delivery_date)] : null,
+          proj.floors ? ['Pisos', proj.floors] : null,
+          proj.total_units ? ['Unidades totales', proj.total_units] : null
+        ].filter(Boolean);
+        var amen = (proj.amenities || []).map(function (a) { return '<span class="rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand">' + esc(a) + '</span>'; }).join('');
+        if (facts.length || amen) {
+          projectBlock = '<section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7"><h2 class="text-lg font-bold tracking-tight text-slate-900">Sobre el proyecto</h2>' +
+            (facts.length ? '<dl class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">' + facts.map(function (f) { return '<div><dt class="text-xs text-slate-400">' + f[0] + '</dt><dd class="mt-0.5 font-semibold text-slate-900">' + esc(f[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
+            (amen ? '<div class="mt-5 flex flex-wrap gap-2">' + amen + '</div>' : '') + '</section>';
+        }
+      }
+
+      var feats = (p.features || []).map(function (f) { return '<span class="inline-flex items-center rounded-full bg-slate-100 px-3.5 py-1.5 text-sm font-medium text-slate-700">' + esc(f) + '</span>'; }).join('');
+
+      var photos = det.media.filter(function (m) { return m.kind === 'image'; }).length;
+      var videos = det.media.length - photos;
+
+      panel.innerHTML = topBar(p.title) +
+        '<div class="px-4 pb-32 pt-4 sm:px-8 sm:pb-10 sm:pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">' +
+          '<div class="min-w-0 space-y-6">' +
+            '<div id="gallery"></div>' +
+            '<div>' +
+              '<div class="flex flex-wrap gap-2">' + badges + '</div>' +
+              '<h1 id="d-title-sr" class="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">' + esc(p.title) + '</h1>' +
+              (locationLine(p) || (p.location && p.location.address)
+                ? '<p class="mt-2 flex items-start gap-2 text-slate-500">' + icon('pin', 'mt-0.5 h-5 w-5 flex-none text-slate-400') + '<span>' + esc([p.location.address, locationLine(p), p.location.province].filter(Boolean).join(' · ')) + '</span></p>' : '') +
+              (map ? '<a href="' + esc(map) + '" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline">' + icon('map', 'h-4 w-4') + 'Ver en Google Maps</a>' : '') +
+              '<p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 lg:hidden">' + (price.pre ? '<span class="mr-1.5 text-base font-medium text-slate-400">' + price.pre + '</span>' : '') + esc(price.value) + '</p>' +
+              specGrid +
+            '</div>' +
+            (descText
+              ? '<section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7"><h2 class="text-lg font-bold tracking-tight text-slate-900">Descripción</h2>' +
+                '<div id="desc" class="desc mt-3 leading-relaxed text-slate-600' + (longDesc ? ' line-clamp-6' : '') + '">' + esc(descText) + '</div>' +
+                (longDesc ? '<button type="button" data-act="more-desc" class="mt-3 text-sm font-semibold text-brand hover:underline">Leer más</button>' : '') + '</section>' : '') +
+            (feats ? '<section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7"><h2 class="text-lg font-bold tracking-tight text-slate-900">Características</h2><div class="mt-4 flex flex-wrap gap-2.5">' + feats + '</div></section>' : '') +
+            projectBlock + unitsTable(p) +
+          '</div>' +
+          '<aside class="mt-6 hidden lg:mt-0 lg:block"><div class="sticky top-24 space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-md">' +
+            '<p class="text-sm font-medium text-slate-400">' + (price.pre || (p.operation === 'rent' ? 'Alquiler' : 'Precio')) + '</p>' +
+            '<p class="text-3xl font-extrabold tracking-tight text-slate-900">' + esc(price.value) + '</p>' +
+            '<div class="space-y-3 pt-2">' + contactButtons(p, true) + '</div>' +
+            '<p class="pt-1 text-center text-xs text-slate-400">Atendido por ' + esc(agency.name) + '</p>' +
+          '</div></aside>' +
+        '</div>' +
+        '<div class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-100 bg-white/95 px-4 pt-3 backdrop-blur safe-b lg:hidden"><div class="mx-auto flex max-w-xl items-center gap-3">' +
+          '<div class="min-w-0 flex-1"><p class="truncate text-xs text-slate-400">' + (price.pre || (p.operation === 'rent' ? 'Alquiler' : 'Precio')) + '</p><p class="truncate text-lg font-extrabold tracking-tight text-slate-900">' + esc(price.value) + '</p></div>' +
+          '<div class="flex-none">' + (waLink('x') ? '<a href="' + esc(waLink('Hola, me interesa "' + p.title + '" (' + location.origin + propUrl(p.slug) + ').')) + '" target="_blank" rel="noopener" class="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">' + icon('wa', 'h-5 w-5') + 'WhatsApp</a>'
+              : (phoneHref() ? '<a href="' + esc(phoneHref()) + '" class="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl btn-brand px-5 text-sm font-semibold shadow-sm">' + icon('phone', 'h-5 w-5') + 'Llamar</a>' : '')) + '</div>' +
+        '</div></div>';
+
+      renderGallery(photos, videos);
+      var cover = safeMedia(p.cover_url);
+      setMeta(p.title + ' · ' + agency.name, (descText || (OPERATION[p.operation] + ' · ' + (locationLine(p) || ''))).replace(/\s+/g, ' ').slice(0, 160), cover);
+      document.title = p.title + ' · ' + agency.name;
+    }
+
+    /* ---- galería (fotos + videos) ---- */
+    function renderGallery(photos, videos) {
+      var g = $('gallery');
+      if (!det.media.length) {
+        g.innerHTML = '<div class="flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-2xl bg-slate-100 text-slate-300 sm:aspect-[16/9]">' + icon('map', 'h-12 w-12') + '<span class="text-sm">Fotos próximamente</span></div>';
+        return;
+      }
+      var thumbs = det.media.map(function (m, i) {
+        var t = safeMedia(m.thumb_url || (m.kind === 'image' ? m.url : ''));
+        var inner = m.kind === 'video'
+          ? '<span class="flex h-full w-full items-center justify-center bg-slate-800 text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>'
+          : '<img src="' + esc(t) + '" alt="" loading="lazy" decoding="async" class="h-full w-full object-cover">';
+        return '<button type="button" data-thumb="' + i + '" aria-label="' + (m.kind === 'video' ? 'Ver video ' : 'Ver foto ') + (i + 1) + '" class="relative h-16 w-24 flex-none snap-start overflow-hidden rounded-xl bg-slate-100 ring-2 ring-transparent transition sm:h-20 sm:w-28">' + inner + '</button>';
+      }).join('');
+      g.innerHTML =
+        '<div id="stage" class="relative aspect-[4/3] w-full select-none overflow-hidden rounded-2xl bg-slate-900 shadow-sm sm:aspect-[16/9]" style="touch-action:pan-y"></div>' +
+        (det.media.length > 1 ? '<div id="thumbs" class="no-scrollbar mt-3 flex snap-x gap-2.5 overflow-x-auto pb-1" role="tablist" aria-label="Miniaturas">' + thumbs + '</div>' : '');
+      showMedia(0, true);
+      bindSwipe($('stage'), function (dir) { showMedia(det.idx + dir); });
+    }
+
+    function mediaHtml(m, opts) {
+      var url = safeMedia(m.url);
+      if (m.kind === 'video') {
+        return '<video src="' + esc(url) + '#t=0.1" controls playsinline preload="metadata" class="' + (opts.cls || 'h-full w-full object-contain') + ' bg-black"' + (opts.autoplay ? ' autoplay' : '') + '>Tu navegador no puede reproducir este video.</video>';
+      }
+      return '<img src="' + esc(url) + '" alt="' + esc(opts.alt || '') + '" decoding="async" class="' + (opts.cls || 'h-full w-full object-cover') + '"' + (opts.eager ? ' fetchpriority="high"' : '') + '>';
+    }
+
+    function showMedia(i, first) {
+      var n = det.media.length;
+      if (!n) return;
+      det.idx = ((i % n) + n) % n;
+      var m = det.media[det.idx];
+      var stage = $('stage');
+      if (!stage) return;
+      var nav = n > 1
+        ? '<button type="button" data-act="prev" aria-label="Anterior" class="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white">' + icon('left', 'h-5 w-5') + '</button>' +
+          '<button type="button" data-act="next" aria-label="Siguiente" class="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white">' + icon('right', 'h-5 w-5') + '</button>' : '';
+      var tools = '<span class="absolute bottom-3 left-3 z-10 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur">' + (det.idx + 1) + ' / ' + n + (m.kind === 'video' ? ' · Video' : '') + '</span>' +
+        (m.kind === 'image' ? '<button type="button" data-act="zoom" aria-label="Ver a pantalla completa" class="absolute bottom-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white">' + icon('expand', 'h-5 w-5') + '</button>' : '');
+      stage.innerHTML = '<div class="h-full w-full' + (m.kind === 'image' ? ' cursor-zoom-in' : '') + '"' + (m.kind === 'image' ? ' data-act="zoom"' : '') + '>' + mediaHtml(m, { alt: det.prop.title + ' — foto ' + (det.idx + 1), eager: !!first }) + '</div>' + nav + tools;
+      document.querySelectorAll('[data-thumb]').forEach(function (b) {
+        var on = Number(b.getAttribute('data-thumb')) === det.idx;
+        b.classList.toggle('ring-[color:var(--brand)]', on);
+        b.classList.toggle('ring-transparent', !on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        if (on && !first && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+      });
+      if (lightbox.classList.contains('flex')) renderLightbox();
+    }
+
+    function bindSwipe(el, cb) {
+      if (!el) return;
+      var x0 = null, y0 = null;
+      el.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') return; x0 = e.clientX; y0 = e.clientY; });
+      el.addEventListener('pointerup', function (e) {
+        if (x0 === null) return;
+        var dx = e.clientX - x0, dy = e.clientY - y0;
+        x0 = y0 = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) cb(dx < 0 ? 1 : -1);
+      });
+      el.addEventListener('pointercancel', function () { x0 = y0 = null; });
+    }
+
+    /* ---- lightbox ---- */
+    function renderLightbox() {
+      var m = det.media[det.idx];
+      if (!m) return;
+      $('lb-stage').innerHTML = mediaHtml(m, { cls: 'max-h-full max-w-full object-contain', alt: det.prop.title });
+      $('lb-count').textContent = (det.idx + 1) + ' / ' + det.media.length + (m.kind === 'video' ? ' · Video' : '');
+      var many = det.media.length > 1;
+      $('lb-prev').classList.toggle('hidden', !many);
+      $('lb-next').classList.toggle('hidden', !many);
+    }
+    function openLightbox() {
+      lightbox.classList.remove('hidden');
+      lightbox.classList.add('flex');
+      lightbox.setAttribute('aria-hidden', 'false');
+      renderLightbox();
+      $('lb-close').focus();
+    }
+    function closeLightbox(silent) {
+      if (!lightbox.classList.contains('flex')) return;
+      lightbox.classList.add('hidden');
+      lightbox.classList.remove('flex');
+      lightbox.setAttribute('aria-hidden', 'true');
+      $('lb-stage').innerHTML = '';
+      if (!silent) { var z = document.querySelector('[data-act="zoom"]'); if (z) z.focus({ preventScroll: true }); }
+    }
+    $('lb-close').addEventListener('click', function () { closeLightbox(); });
+    $('lb-prev').addEventListener('click', function () { showMedia(det.idx - 1); });
+    $('lb-next').addEventListener('click', function () { showMedia(det.idx + 1); });
+    $('lb-stage').addEventListener('click', function (e) { if (e.target === this) closeLightbox(); });
+    bindSwipe($('lb-stage'), function (dir) { showMedia(det.idx + dir); });
+
+    /* ---- abrir / cerrar la ficha con historial del navegador ---- */
+    function openDetail(slug, opts) {
+      opts = opts || {};
+      det = { prop: null, units: [], media: [], idx: 0, opener: opts.opener || null, open: false };
+      openShell();
+      renderDetailLoading();
+      if (opts.push) history.pushState({ detail: slug }, '', propUrl(slug));
+      panel.querySelector('[data-act="close"]').focus({ preventScroll: true });
+
+      api('/properties/public/' + enc(slug)).then(function (p) {
+        det.prop = p;
+        det.media = (p.media || []).filter(function (m) { return safeMedia(m.url); });
+        var needUnits = p.kind === 'project';
+        return (needUnits ? api('/properties/public/' + enc(slug) + '/units').catch(function () { return []; }) : Promise.resolve([])).then(function (u) {
+          det.units = Array.isArray(u) ? u : [];
+          if (!det.open) return; // se cerró mientras cargaba
+          renderDetail();
+          var back = panel.querySelector('[data-act="close"]');
+          if (back) back.focus({ preventScroll: true });
+        });
+      }).catch(function (err) {
+        if (!det.open) return;
+        if (err && err.agencyMissing) { closeShell(); showMissing(); return; }
+        renderDetailError(err && err.status === 404 ? 'Puede que haya sido vendida, alquilada o retirada del catálogo.' : (err.message || ''), err && err.status === 404);
+      });
+    }
+
+    function closeDetail() {
+      if (!det.open) return;
+      if (history.state && history.state.detail) history.back(); // dispara popstate -> closeShell
+      else { history.replaceState(null, '', listUrl()); closeShell(); }
+    }
+
+    window.addEventListener('popstate', function () {
+      var slug = currentProp();
+      if (slug) { if (!det.open || (det.prop && det.prop.slug !== slug)) openDetail(slug, { push: false }); }
+      else if (det.open) closeShell();
+    });
+
+    $('grid').addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-slug]');
+      if (!a) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // nueva pestaña: comportamiento normal
+      e.preventDefault();
+      openDetail(a.getAttribute('data-slug'), { push: true, opener: a });
+    });
+
+    panel.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act],[data-thumb]');
+      if (!b) return;
+      if (b.hasAttribute('data-thumb')) { showMedia(Number(b.getAttribute('data-thumb'))); return; }
+      var act = b.getAttribute('data-act');
+      if (act === 'close') closeDetail();
+      else if (act === 'prev') showMedia(det.idx - 1);
+      else if (act === 'next') showMedia(det.idx + 1);
+      else if (act === 'zoom') openLightbox();
+      else if (act === 'more-desc') { $('desc').classList.remove('line-clamp-6'); b.remove(); }
+      else if (act === 'share') share();
+    });
+    detail.addEventListener('mousedown', function (e) { if (e.target === detail) closeDetail(); });
+
+    function share() {
+      if (!det.prop) return;
+      var url = location.origin + propUrl(det.prop.slug);
+      var data = { title: det.prop.title, text: det.prop.title + ' — ' + (agency ? agency.name : ''), url: url };
+      if (navigator.share) { navigator.share(data).catch(function () {}); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { toast('Enlace copiado'); }, function () { toast(url); });
+      } else { toast(url); }
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (lightbox.classList.contains('flex')) {
+        if (e.key === 'Escape') { closeLightbox(); e.stopPropagation(); }
+        else if (e.key === 'ArrowLeft') showMedia(det.idx - 1);
+        else if (e.key === 'ArrowRight') showMedia(det.idx + 1);
+        else trapTab(lightbox, e);
+        return;
+      }
+      if (!det.open) return;
+      if (e.key === 'Escape') closeDetail();
+      else if (e.key === 'ArrowLeft' && det.media.length > 1 && !/INPUT|TEXTAREA|SELECT|VIDEO/.test((document.activeElement || {}).tagName || '')) showMedia(det.idx - 1);
+      else if (e.key === 'ArrowRight' && det.media.length > 1 && !/INPUT|TEXTAREA|SELECT|VIDEO/.test((document.activeElement || {}).tagName || '')) showMedia(det.idx + 1);
+      else trapTab(detail, e);
+    });
+
+    /* ---------------------------------------------------------------- arranque */
+    function showMissing() {
+      $('site').classList.add('hidden');
+      detail.classList.add('hidden');
+      lockScroll(false);
+      $('missing').classList.remove('hidden');
+      $('missing').classList.add('flex');
+      document.title = 'Agencia no encontrada';
+    }
+
+    function boot() {
+      if (ctx.agency === '~invalid~') { showMissing(); return; }
+      paintOps();
+      var tenantReq = api('/tenants/public').then(function (t) {
+        agency = t;
+        applyBrand(t);
+        renderAgency();
+      });
+      var listReq = loadList(false);
+      tenantReq.then(function () {
+        var slug = ctx.prop || currentProp();
+        if (slug) openDetail(slug, { push: false });
+      }).catch(function (err) {
+        if (err && err.agencyMissing) { showMissing(); return; }
+        $('brand-name').textContent = 'Catálogo de propiedades';
+        agency = { name: 'Catálogo de propiedades', branding: {} };
+        showListError(err);
+      });
+      return listReq;
+    }
+    boot();
+  })();
+  </script>
+</body>
+</html>

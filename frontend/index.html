@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/static/session.js"></script>
   <title>Iniciar sesión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,10 +81,12 @@
             </div>
           </div>
 
-          <label class="flex items-center gap-2 text-sm text-slate-600">
-            <input id="is-superadmin" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-            Acceso de superadministrador
-          </label>
+          <div id="agency-field" class="hidden">
+            <label for="agency" class="block text-sm font-medium text-slate-700 mb-2">Código de tu agencia</label>
+            <input id="agency" name="agency" type="text" autocomplete="organization" placeholder="mi-agencia"
+              class="block w-full rounded-xl border-0 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-2 focus:ring-indigo-500">
+            <p class="mt-1.5 text-xs text-slate-500">Tu correo existe en más de una agencia; indica el código para continuar.</p>
+          </div>
 
           <button id="submit-btn" type="submit"
             class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70">
@@ -101,16 +104,14 @@
   </div>
 
   <script type="module">
-    const API_URL = '/api/v1/auth/login';
-    const SUPERADMIN_API_URL = '/api/v1/auth/superadmin/login';
-    const DASHBOARD_URL = 'dashboard.html';
-    const ADMIN_URL = 'admin.html';
-    const homeFor = (audience) => (audience === 'superadmin' ? ADMIN_URL : DASHBOARD_URL);
+    const TENANT_LOGIN = '/api/v1/auth/login';
+    const SUPERADMIN_LOGIN = '/api/v1/auth/superadmin/login';
 
     const $ = (id) => document.getElementById(id);
     const form = $('login-form');
     const emailInput = $('email');
     const passwordInput = $('password');
+    const agencyInput = $('agency');
     const submitBtn = $('submit-btn');
     const btnText = $('btn-text');
     const spinner = $('spinner');
@@ -142,6 +143,7 @@
       if (!data) return fallback;
       if (typeof data.detail === 'string') return data.detail;
       if (Array.isArray(data.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+      if (data.detail?.message) return data.detail.message;
       if (data.message) return data.message;
       return fallback;
     };
@@ -151,10 +153,23 @@
       passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
     });
 
-    // Si ya hay sesión, ir directo al dashboard
-    if (localStorage.getItem('access_token')) {
-      window.location.replace(homeFor(localStorage.getItem('auth_audience')));
+    // Sesión previa: solo se reutiliza si el token es válido (así no hay bucles con el dashboard/admin)
+    if (Session.valid()) {
+      window.location.replace(Session.home(Session.audience()));
+    } else {
+      Session.clear();
     }
+
+    const post = async (url, body) => {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      let data = null;
+      try { data = await response.json(); } catch (_) { /* respuesta sin JSON */ }
+      return { response, data };
+    };
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -162,6 +177,7 @@
 
       const email = emailInput.value.trim();
       const password = passwordInput.value;
+      const agency = agencyInput.value.trim().toLowerCase();
 
       if (!email || !password) {
         showError('Ingresa tu correo y contraseña.');
@@ -171,37 +187,40 @@
       setLoading(true);
 
       try {
-        // Se envía como JSON; si tu endpoint usa OAuth2PasswordRequestForm,
-        // cambia body por: new URLSearchParams({ username: email, password })
-        // y Content-Type por 'application/x-www-form-urlencoded'.
-        const isSuper = $('is-superadmin').checked;
-        const response = await fetch(isSuper ? SUPERADMIN_API_URL : API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+        // 1) Agente / encargado de agencia
+        let result = await post(TENANT_LOGIN, agency ? { email, password, agency } : { email, password });
 
-        let data = null;
-        try { data = await response.json(); } catch (_) { /* respuesta sin JSON */ }
-
-        if (!response.ok) {
-          const fallback = response.status === 401 || response.status === 403
-            ? 'Credenciales incorrectas. Verifica tus datos.'
-            : 'No se pudo iniciar sesión. Intenta de nuevo.';
-          throw new Error(extractMessage(data, fallback));
+        // 2) Si las credenciales no son de una agencia, probar como Superadministrador
+        if (result.response.status === 401 && !agency) {
+          const sa = await post(SUPERADMIN_LOGIN, { email, password });
+          if (sa.response.ok) result = sa;
         }
 
+        if (result.response.status === 409 && result.data?.detail?.code === 'agency_required') {
+          $('agency-field').classList.remove('hidden');
+          agencyInput.focus();
+          throw new Error(extractMessage(result.data, 'Indica el código de tu agencia.'));
+        }
+
+        if (!result.response.ok) {
+          const s = result.response.status;
+          const fallback = s === 401 || s === 403
+            ? 'Credenciales incorrectas. Verifica tus datos.'
+            : 'No se pudo iniciar sesión. Intenta de nuevo.';
+          throw new Error(extractMessage(result.data, fallback));
+        }
+
+        const data = result.data;
         if (!data?.access_token) {
           throw new Error('Respuesta inválida del servidor.');
         }
 
-        const audience = isSuper ? 'superadmin' : 'tenant';
+        // Guardar el token (misma clave para todos) y redirigir según el rol (claim "aud" del JWT)
+        Session.clear();
         localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('auth_audience', audience);
         if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
-        else localStorage.removeItem('refresh_token');
 
-        window.location.href = homeFor(audience);
+        window.location.href = Session.home(Session.audience());
       } catch (err) {
         const isNetwork = err instanceof TypeError;
         showError(isNetwork ? 'Error de conexión con el servidor.' : err.message);
@@ -209,7 +228,7 @@
       }
     });
 
-    [emailInput, passwordInput].forEach((el) => el.addEventListener('input', hideError));
+    [emailInput, passwordInput, agencyInput].forEach((el) => el.addEventListener('input', hideError));
   </script>
 </body>
 </html>

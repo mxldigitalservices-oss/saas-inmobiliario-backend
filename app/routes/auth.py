@@ -93,16 +93,46 @@ async def register(data: RegisterTenantRequest, request: Request):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(
-    data: LoginRequest,
-    tenant: Tenant = Depends(resolve_tenant),
-):
-    """Login de un agente. La agencia se identifica por el Host header."""
-    user = await User.find_one({"tenant_id": tenant.id, "email": data.email})
-    stored_hash = user.password_hash if user is not None else security.dummy_hash()
-    valid = security.verify_password(data.password, stored_hash)
-    if user is None or not valid or not user.is_active:
+async def login(data: LoginRequest, request: Request):
+    """Login único de agentes (un solo dominio, sin subdominios).
+
+    La agencia se deduce de las credenciales: se buscan los usuarios con ese correo y
+    se conservan los que coinciden con la contraseña. Si hay más de uno (mismo correo y
+    contraseña en varias agencias) se desambigua por `agency` (slug) o por el Host.
+    """
+    candidates = await User.find({"email": data.email}).to_list()
+    if data.agency:
+        wanted = await Tenant.find_one({"slug": data.agency.strip().lower()})
+        candidates = [u for u in candidates if wanted is not None and u.tenant_id == wanted.id]
+
+    if not candidates:
+        security.verify_password(data.password, security.dummy_hash())  # tiempo constante
+    valid_users = [
+        u
+        for u in candidates
+        if u.is_active and security.verify_password(data.password, u.password_hash)
+    ]
+    if not valid_users:
         raise _unauthorized("Credenciales inválidas")
+
+    if len(valid_users) > 1:
+        try:
+            host_tenant = await resolve_tenant(request)
+            narrowed = [u for u in valid_users if u.tenant_id == host_tenant.id]
+            if narrowed:
+                valid_users = narrowed
+        except HTTPException:
+            pass
+    if len(valid_users) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "agency_required",
+                "message": "Este correo existe en varias agencias. Indica el código de tu agencia.",
+            },
+        )
+
+    user = valid_users[0]
     user.last_login_at = utcnow()
     await user.save()
     return _token_response(user)
